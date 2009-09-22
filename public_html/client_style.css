@@ -1,0 +1,291 @@
+html, body {
+  height: 100%;
+}
+
+body {
+  font-size: 70%;
+  font-family: Tahoma, sans-serif;
+  background: -o-skin("Dialog Skin");
+  padding: 0;
+  margin: 0;
+}
+
+a {
+  text-decoration: none;
+  color: #000;
+}
+
+#quickfind_container {
+  padding: .5em .5em 0 .5em;
+}
+
+#quickfind {
+  padding-left: 22px;
+  width: 100%;
+  height: 22px;
+  background: #fff url(search_default.png) no-repeat 2px 2px;
+  border: 1px solid #777;
+  box-sizing: border-box;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+li {
+  white-space: nowrap;
+  overflow: hidden;
+  -o-text-overflow: ellipsis;
+}
+
+form {
+  margin: 0;
+  padding: 0;
+}
+
+xli:hover {
+  text-decoration: underline;
+}
+
+#scripts_list  {
+  padding: 1em;
+  margin: .5em;
+  background: -o-skin("Dialog Page Skin");
+  position: relative;
+}
+
+#scripts_list label:hover,
+#scripts_list button:hover
+{
+  /*background: #ddd;*/
+  color: #00a;
+  text-decoration: underline;
+}
+
+/*
+ul#scripts_list > li:nth-child(even) {
+  background: #eee;
+}
+*/
+
+#scripts_list label button {
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+#scripts_list .folder img {
+  content: -o-skin("Folder");
+}
+
+#scripts_list .edit {
+  position: absolute;
+  cursor: pointer;
+  right: 10px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+}
+
+#scripts_list .edit img {
+  content: -o-skin("Menu Widgets");
+}
+
+label {
+  cursor: pointer;
+}
+
+xinput {
+  background: -o-skin("Expand Disabled");
+  width: -o-skin;
+  height: -o-skin;
+  margin: 0;
+  padding: 0px;
+  border: none;
+}
+
+xinput:checked {
+  background: -o-skin("Expand Enabled")
+}
+
+.script_infobox {
+  display: none;
+  background: -o-skin("Pagebar Button Skin.left.selected");
+  padding: 10px;
+  left: 3em;
+  margin-top: 1em;
+  position: absolute;
+  max-width: 80%;
+  z-index: 1;
+  font-size: smaller;
+}
+
+.script_infobox p {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  -o-text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.script_infobox p b {
+  display: inline-block;
+  min-width: 5em;
+}
+
+form:hover .script_infobox {
+  display: block;
+}
+
+.infoboxcontent {
+  display: none;
+  font-size: smaller;
+  white-space: -o-pre-wrap;
+  background: yellow;
+  border: 1px solid #000;
+  position: absolute;
+  left: 0;
+}
+
+#settings_container {
+  display: none;
+  position: fixed;
+  opacity: .95;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  padding: .5em;
+}
+
+#settings_container > #settings_header {
+  padding: 1em;
+  background: -o-skin("Tab Button Skin");
+  white-space: nowrap;
+  overflow: hidden;
+  -o-text-overflow: ellipsis;
+}
+
+#settings_container > #settings_header > #close_settings {
+  display: inline-block;
+  background: -o-skin("Pagebar Close Button Skin.hover");
+  width: -o-skin;
+  height: -o-skin;
+  cursor: pointer;
+}
+
+#settings_container > #settings_header > #close_settings:hover {
+  background: -o-skin("Pagebar Close Button Skin.pressed");
+}
+
+#settings_container > #settings_header > #settings_title {
+  font-size: 1.6em;
+}
+
+#settings_container > #settings {
+  padding: 1em;
+  white-space: nowrap;
+  background: -o-skin("Dialog Page Skin");
+}
+
+#settings ul.indent1 { padding-left: 1em; }
+#settings ul.indent2 { padding-left: 2em; }
+#settings ul.indent3 { padding-left: 3em; }
+
+#settings input[type="text"] {
+  width: 95%;
+}
+
+#settings li {
+  display: inline-block;
+  margin: 0 1px;
+}
+
+#settings .setting_elem {
+  background: -o-skin("Push Button Skin");
+  margin-left: 2px;
+  padding: 0 4px;
+  overflow: hidden;
+  -o-text-overflow: ellipsis;
+}
+
+#settings .setting_elem:hover {
+  background: -o-skin("Push Default Button Skin");
+}
+
+#edit_dialog {
+  display: none;
+  background-color: rgba(0,0,0,.5);
+  color: #fff;
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  text-align: right;
+}
+
+#edit_dialog form {
+  background: -o-skin("Dialog Page Skin");
+  padding: 1em;
+  margin: .5em;
+}
+
+#edit_dialog textarea {
+  width: 100%;
+  height: 80%;
+  padding: 0;
+  margin-bottom: 5px;
+  border: 1px solid #aaa;
+  font-size: small;
+}
+
+#install_dialog {
+  height: 200px;
+  position: absolute;
+  top: 50%;
+  margin-top: -150px;
+  width: 500px;
+  left: 50%;
+  margin-left: -250px;
+}
+
+#install_dialog h1 {
+  font-size: 48px;
+  color: -o-skin("Dialog Skin");
+  text-shadow: #000 1px 1px 4px;
+  font-family: Verdana, sans-serif;
+  margin: 0;
+}
+
+#install_dialog h1 img {
+  vertical-align: middle;
+}
+
+#install_dialog h1 div {
+  font-size: 14px;
+  text-align: right;
+}
+
+#install_dialog form {
+  background: -o-skin("Dialog Page Skin");
+  padding: 1em;
+  text-align: center;
+}
+
+#install_dialog form p {
+  font-size: 16px;
+}
+
+#install_dialog form code {
+  background: #FFA1A1;
+}
+
+#footer {
+	text-align: center;
+	font-size: smaller;
+}

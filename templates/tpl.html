@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <link rel="shortcut icon" href="favicon.16x16.png" type="image/x-icon"/>
+  <link rel="stylesheet" type="text/css" href="client_style.css" />
+  <script type="text/javascript" src="AjaxRequest.js" />
+  <script type="text/javascript" src="client_script.js" />
+  <title>UJS Manager</title>
+</head>
+<body>
+  <div id="quickfind_container">
+    <input type="text" id="quickfind" value="Quick find">
+  </div>
+  <ul id="scripts_list">
+    <li data-list="scripts">
+      <!--<span class="infobox" data-keep-if="scripts[].header">
+        <div class="infoboxcontent">{{scripts[].header}}</div>
+      </span>-->
+      <form name="{{scripts[].filename}}">
+        <button type="button" class="edit" data-keep-if="scripts[].hassettings"
+          title="Edit script settings"><img></button>
+        <label>
+          <span data-keep-if="scripts[].isdirectory">
+            <button type="button" class="folder"><img> {{scripts[].prettyname}}</button>
+          </span>
+          <span data-remove-if="scripts[].isdirectory">
+            <input type="checkbox" data-remove-if="scripts[].isenabled">
+            <input type="checkbox" data-keep-if="scripts[].isenabled" checked="checked">
+            {{scripts[].prettyname}}
+          </span>
+        </label>
+        <div class="script_infobox" data-keep-if="scripts[].header">
+          <p data-list="scripts[].header">
+            <b data-keep-if="scripts[].header[].key">{{scripts[].header[].key}}</b>
+            {{scripts[].header[].value}}
+          </p>
+        </div>
+      </form>
+    </li>
+  </ul>
+  <div id="settings_container">
+    <div id="settings_header">
+      <span id="close_settings" onclick="closeScriptSettings()"
+        title="Close script settings"></span>
+      <span id="settings_title">[script_title]</span>
+    </div>
+    <div id="settings"></div>
+  </div>
+  <div id="edit_dialog">
+    <form onsubmit="saveEditedSetting(this);return false;">
+      <textarea id="edit_field"></textarea>
+      <button>Save</button>
+      <button onclick="closeEditDialog();return false;">Cancel</button>
+  </div>
+  <div id="footer">
+    UJS Manager by <a href="http://my.opera.com/d.i.z./">Rafał Chłodnicki</a>
+  </div>
+</body>
+</html>
