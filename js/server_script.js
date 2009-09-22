@@ -1,9 +1,19 @@
+/*
+ *
+ * UJS Manager Unite Application
+ * Rafal Chlodnicki, 2009
+ *
+ */
 
 var
   dir = null, //opera.io.filesystem.mountSystemDirectory('shared');
+  new_version_available = false,
+  service_doap = 'http://unite.opera.com/service/doap/401/',
+  service_path = 'http://' + opera.io.webserver.hostName + opera.io.webserver.currentServicePath,
   mnt = opera.io.filesystem.mountSystemDirectory('application'),
   static_files = [],
   data = { scripts: getAllUserScripts(null, true) };
+
 
 sharePublicHtml();
 
@@ -266,15 +276,18 @@ function getAllUserScripts(requested_dir, istopdir)
     // copy user js installer if not found or older
     var scr_installer = getUserScript( mnt.resolve('/js/ujs_manager_installer.js') );
 
-    if ( !ujs_installer || scr_installer.header.version > ujs_installer.header.version )
+    if ( !ujs_installer
+        || scr_installer.header.version > ujs_installer.header.version
+        || ujs_installer.header.servicepath != service_path )
     {
       // add user js installer to list because it wasn't there when reading dir
       if ( !ujs_installer )
         scripts.push( scr_installer );
 
       // insert current service path to ujs installer
-      scr_installer.filecontent = scr_installer.filecontent.replace('{{service_path}}',
-        'http://' + opera.io.webserver.hostName + opera.io.webserver.currentServicePath);
+      scr_installer.filecontent = scr_installer.filecontent.replace(
+        /\{\{service_path\}\}/g,
+        service_path);
       writeFile('ujs_manager_installer.js', scr_installer.filecontent);
     }
   }
@@ -446,20 +459,102 @@ function downloadScript(uri)
   var xhr = new XMLHttpRequest();
   xhr.open('GET', uri, false);
   xhr.setRequestHeader('Cache-Control', 'no-cache');
-  xhr.send();
+  try
+  {
+    xhr.send();
+  }
+  catch(e)
+  {
+    // will throw for local files for example
+    return false;
+  }
 
-  // little validation for javascript mime-type
+  // little validation to make sure it's javascript
   if ( xhr.getResponseHeader('Content-type').indexOf('javascript') == -1 )
     return false;
 
   if ( !xhr.responseText )
     return false;
 
+  // extract file name from path
   var filename = uri.match(/.+\/([^/?]+)/);
   if ( filename )
     filename = filename[1];
   else
     return false;
 
+  // create user script file
   return createFile(filename, xhr.responseText);
 }
+
+var savePref = function(key, val)
+{
+  return widget.setPreferenceForKey(encodeURIComponent(val), key);
+}
+
+var getPref = function(name)
+{
+  return decodeURIComponent(widget.preferenceForKey(name))||null;
+}
+
+/**
+  * update checking
+  */
+var updater = new function()
+{
+  if ( !window.widget )
+    return false;
+
+  var latest_ver = getPref('latestVer');
+  var last_check = getPref('lastCheck');
+
+  this.checkUpdate = function()
+  {
+    var cur_date = new Date().getTime();
+
+    if ( last_check )
+    {
+      var days_since_check = (cur_date-last_check)/(1000*60*60*24);
+      if ( days_since_check < 3 ) return false;
+    }
+
+    savePref('lastCheck', cur_date);
+
+    var req = new XMLHttpRequest();
+    req.onreadystatechange = function()
+    {
+      if ( req.readyState == 4 )
+      {
+        var
+          doap = req.responseXML,
+          remoteVersion = null;
+
+        if ( !doap ) return false;
+
+        var nsresolve = function(ns)
+        {
+          switch(ns)
+          {
+            case 'rdf': return 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
+            case 'doap': return 'http://usefulinc.com/ns/doap#';
+          }
+        }
+
+        // compare with current version
+        if ( remoteVersion = doap.selectSingleNode('//rdf:RDF/doap:Project/doap:release/doap:Version/doap:revision', nsresolve) )
+        {
+          remoteVersion = remoteVersion.text;
+          if ( latest_ver && parseFloat(remoteVersion) > latest_ver )
+            new_version_available = true;
+          else
+            savePref('latestVer', remoteVersion);
+        }
+        return false;
+      }
+    }
+    req.open('GET', service_doap);
+    req.setRequestHeader('Cache-Control', 'no-cache');
+    req.send();
+  };
+}
+updater.checkUpdate();

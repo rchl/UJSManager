@@ -1,9 +1,13 @@
-var currently_editing = null;
+var
+  currently_editing = null,
+  service_page = 'http://unite.opera.com/service/401/';
 
 window.addEventListener(
   'load',
   function()
   {
+    Badge.show('Just testing badgie thing');
+
     // add onchange handler to checkboxes
     var elems = document.selectNodes('//input[@type="checkbox"]');
     for( var i=0,check; check=elems[i]; i++ )
@@ -46,6 +50,71 @@ window.addEventListener(
 );
 
 function $(id) { return document.getElementById(id); }
+
+var Badge = new function()
+{
+  var
+    _el = null,
+    _timeout = null;
+
+  this.show = function(msg, timeout)
+    {
+      if ( !_el ) init();
+
+      $('badge_msg').textContent = msg;
+
+      _el.style.display = 'block';
+      _el.style.marginTop = -_el.scrollHeight+'px';
+
+      _timeout = timeout;
+      animateDown();
+    };
+
+  this.hide = function()
+    {
+      animateUp();
+    };
+
+  var init = function()
+    {
+      _el = $('badge');
+      $('badge_close').onclick = animateUp;
+    };
+
+  var animateDown = function()
+    {
+      _el.style.marginTop = (parseInt(_el.style.marginTop)+2) + 'px';
+
+      if ( parseInt(_el.style.marginTop) < 0 )
+        setTimeout( arguments.callee, 10 );
+      else
+      {
+        _el.style.marginTop = 0;
+        if ( _timeout )
+        {
+          setTimeout( animateUp, _timeout );
+          _timeout = false;
+        }
+      }
+    };
+
+  var animateUp = function()
+    {
+      if ( !_el.cachedHeight)
+        _el.cachedHeight = -_el.scrollHeight;
+
+      if ( parseInt(_el.style.marginTop) > _el.cachedHeight )
+      {
+        _el.style.marginTop = (parseInt(_el.style.marginTop)-4) + 'px';
+        _timeout = setTimeout( arguments.callee, 10 );
+      }
+      else
+      {
+        _el.style.marginTop = -_el.scrollHeight+'px';
+        _el.cachedHeight = null;
+      }
+    }
+}
 
 function openSettings(ev)
 {

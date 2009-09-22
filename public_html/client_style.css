@@ -15,6 +15,29 @@ a {
   color: #000;
 }
 
+#badge {
+  display: none;
+  background: -o-skin("Content Block Toolbar Skin");
+  padding: 6px;
+  font-family: Verdana, Tahoma, sans-serif;
+  font-size: 12px;
+}
+
+#badge #badge_close {
+  float: right;
+  padding: 0;
+  margin: 0 3px;
+  border: none;
+  background: -o-skin("Speed Dial Thumbnail Close Button Skin");
+  width: -o-skin;
+  height: -o-skin;
+  cursor: pointer;
+}
+
+#badge #badge_msg {
+  padding: 3px;
+}
+
 #quickfind_container {
   padding: .5em .5em 0 .5em;
 }

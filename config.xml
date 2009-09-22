@@ -1,11 +1,11 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<widget id="ujs_manager_diz" network="private public" version="0.5">
+<widget id="ujs_manager_diz" network="private public">
 
   <widgetname>UJS Manager</widgetname>
   <description>Manager for user scripts</description>
   <servicepath>ujs_manager</servicepath>
 
-  
+
   <icon height="48" width="48">public_html/favicon.48x48.png</icon>
   <icon height="32" width="32">public_html/favicon.32x32.png</icon>
   <icon height="16" width="16">public_html/favicon.16x16.png</icon>
