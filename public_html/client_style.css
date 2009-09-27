@@ -43,7 +43,7 @@ form {
   font-size: 12px;
 }
 
-#notifier #close {
+#notifier #close_notifier {
   float: right;
   padding: 0;
   margin: 0 3px;

@@ -128,7 +128,7 @@ function handleXHRQuery(query)
 {
   var
     action = query['action'][0],
-    q_filename = query['filename'][0];
+    q_filename = query['filename'] ? query['filename'][0] : null;
 
   switch (action)
   {
@@ -187,6 +187,9 @@ function handleXHRQuery(query)
     case 'delete':
       var result = deleteFile(q_filename);
       return result||{error: 'Deleting file failed!'};
+    case 'remindmelater':
+      updater.remindMeLater();
+      return true;
     default:
       return {error: 'Option not implemented!'};
   }
@@ -634,4 +637,10 @@ var updater = new function()
     req.setRequestHeader('Cache-Control', 'no-cache');
     req.send();
   };
+
+  this.remindMeLater = function()
+  {
+    savePref('latestVer', latest_ver=SERVICE_VERSION);
+    savePref('lastCheck', last_check=new Date().getTime());
+  }
 }

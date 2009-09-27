@@ -18,7 +18,7 @@ window.addEventListener(
     }
 
     // add click handler to expand script options
-    var elems = document.selectNodes('//form[@name]');
+    elems = document.selectNodes('//form[@name]');
     for( i=0; elem=elems[i]; i++ )
     {
       elem.addEventListener('click', toggleOptions, false);
@@ -50,6 +50,9 @@ window.addEventListener(
     {
       elem.addEventListener('click', toggleScript, false);
     }
+
+    elem = $('close_notifier');
+    elem.addEventListener('click', remindMeLater, false);
 
     // add handler for quick search
     var qf = document.selectSingleNode('//input[@id="quickfind"]');
@@ -136,6 +139,25 @@ var Notifier = new function()
         _el.cachedHeight = null;
       }
     }
+}
+
+function remindMeLater()
+{
+  var close_button = this;
+
+  AjaxRequest.post(
+    {
+      parameters  :
+      {
+        action    : 'remindmelater'
+      },
+      onSuccess   : function(req)
+                    {
+                      // hide notifier
+                      close_button.parentNode.style.display = 'none';
+                    }
+    }
+  );
 }
 
 function openSettings(ev)

@@ -10,6 +10,7 @@
 </head>
 <body>
   <div id="notifier" data-keep-if="newversion">
+    <button id="close_notifier" title="Do not bother me for next 3 days"></button>
     <span id="msg"><a href="http://unite.opera.com/service/401/"
     target="_blank">UJS Manager update available!</a></span></div>
   <div id="quickfind_container">
@@ -17,9 +18,6 @@
   </div>
   <ul id="scripts_list">
     <li data-list="scripts">
-      <!--<span class="infobox" data-keep-if="scripts[].header">
-        <div class="infoboxcontent">{{scripts[].header}}</div>
-      </span>-->
       <form name="{{scripts[].filename}}">
         <button type="button" class="edit" data-keep-if="scripts[].hassettings"
           title="Edit script settings"><img></button>
