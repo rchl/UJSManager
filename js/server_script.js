@@ -10,7 +10,7 @@ var
   PUBLIC_DIR = opera.io.filesystem.mountSystemDirectory('application'),
   SERVICE_DOAP = 'http://unite.opera.com/service/doap/401/',
   /* NOT FORGET TO UPDATE FOR EVERY RELEASE !!! */
-  SERVICE_VERSION = '1.4',
+  SERVICE_VERSION = '1.5',
   service_path = 'http://' + opera.io.webserver.hostName + opera.io.webserver.currentServicePath,
   static_files = [],
   data = { scripts: getAllUserScripts(null, true) };
