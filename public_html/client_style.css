@@ -15,40 +15,8 @@ a {
   color: #000;
 }
 
-#badge {
-  display: none;
-  background: -o-skin("Content Block Toolbar Skin");
-  padding: 6px;
-  font-family: Verdana, Tahoma, sans-serif;
-  font-size: 12px;
-}
-
-#badge #badge_close {
-  float: right;
-  padding: 0;
-  margin: 0 3px;
-  border: none;
-  background: -o-skin("Speed Dial Thumbnail Close Button Skin");
-  width: -o-skin;
-  height: -o-skin;
+label {
   cursor: pointer;
-}
-
-#badge #badge_msg {
-  padding: 3px;
-}
-
-#quickfind_container {
-  padding: .5em .5em 0 .5em;
-}
-
-#quickfind {
-  padding-left: 22px;
-  width: 100%;
-  height: 22px;
-  background: #fff url(search_default.png) no-repeat 2px 2px;
-  border: 1px solid #777;
-  box-sizing: border-box;
 }
 
 ul {
@@ -68,8 +36,39 @@ form {
   padding: 0;
 }
 
-xli:hover {
-  text-decoration: underline;
+#notifier {
+  background: -o-skin("Content Block Toolbar Skin");
+  padding: 6px;
+  font-family: Verdana, Tahoma, sans-serif;
+  font-size: 12px;
+}
+
+#notifier #close {
+  float: right;
+  padding: 0;
+  margin: 0 3px;
+  border: none;
+  background: -o-skin("Speed Dial Thumbnail Close Button Skin");
+  width: -o-skin;
+  height: -o-skin;
+  cursor: pointer;
+}
+
+#notifier #msg {
+  padding: 3px;
+}
+
+#quickfind_container {
+  padding: .5em .5em 0 .5em;
+}
+
+#quickfind {
+  padding-left: 22px;
+  width: 100%;
+  height: 22px;
+  background: #fff url(search_default.png) no-repeat 2px 2px;
+  border: 1px solid #777;
+  box-sizing: border-box;
 }
 
 #scripts_list  {
@@ -79,12 +78,18 @@ xli:hover {
   position: relative;
 }
 
-#scripts_list label:hover,
-#scripts_list button:hover
+#scripts_list form {
+  padding: 3px;
+  display: block;
+  cursor: pointer;
+}
+
+#scripts_list form:hover
 {
   /*background: #ddd;*/
   color: #00a;
-  text-decoration: underline;
+  background: -o-skin("Cycler Page Button Skin.hover");
+  outline: 1px solid #eee;
 }
 
 /*
@@ -93,8 +98,37 @@ ul#scripts_list > li:nth-child(even) {
 }
 */
 
-#scripts_list label button {
+#scripts_list form button {
   padding: 0;
+}
+
+#scripts_list .desc {
+  display: none;
+  color: -o-skin("Panel Treeview Skin.disabled");
+  padding-left: 2em;
+}
+
+#scripts_list .desc button img {
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  background: transparent;
+  vertical-align: text-bottom;
+}
+
+#scripts_list .delete img {
+  content: -o-skin("Trash");
+}
+
+#scripts_list .toggle img.disabled {
+  content: -o-skin("Expand Enabled");
+}
+
+#scripts_list .toggle img {
+  content: -o-skin("Expand Disabled");
+}
+
+#scripts_list .folder {
   border: none;
   background: transparent;
 }
@@ -108,7 +142,7 @@ ul#scripts_list > li:nth-child(even) {
   cursor: pointer;
   right: 10px;
   padding: 0;
-  margin: 0;
+  margin: 0 3px;
   border: none;
   background: transparent;
 }
@@ -117,32 +151,11 @@ ul#scripts_list > li:nth-child(even) {
   content: -o-skin("Menu Widgets");
 }
 
-label {
-  cursor: pointer;
-}
-
-xinput {
-  background: -o-skin("Expand Disabled");
-  width: -o-skin;
-  height: -o-skin;
-  margin: 0;
-  padding: 0px;
-  border: none;
-}
-
-xinput:checked {
-  background: -o-skin("Expand Enabled")
-}
-
 .script_infobox {
-  display: none;
+  display: inline-block;
   background: -o-skin("Pagebar Button Skin.left.selected");
   padding: 10px;
-  left: 3em;
-  margin-top: 1em;
-  position: absolute;
-  max-width: 80%;
-  z-index: 1;
+  margin: 1em 0;
   font-size: smaller;
 }
 
@@ -150,17 +163,13 @@ xinput:checked {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  -o-text-overflow: ellipsis;
   white-space: nowrap;
+  -o-text-overflow: ellipsis;
 }
 
 .script_infobox p b {
   display: inline-block;
   min-width: 5em;
-}
-
-form:hover .script_infobox {
-  display: block;
 }
 
 .infoboxcontent {
@@ -194,15 +203,18 @@ form:hover .script_infobox {
 
 #settings_container > #settings_header > #close_settings {
   display: inline-block;
-  background: -o-skin("Pagebar Close Button Skin.hover");
+  background: -o-skin("Back");
   width: -o-skin;
   height: -o-skin;
   cursor: pointer;
+  vertical-align: text-bottom;
 }
 
+/*
 #settings_container > #settings_header > #close_settings:hover {
   background: -o-skin("Pagebar Close Button Skin.pressed");
 }
+*/
 
 #settings_container > #settings_header > #settings_title {
   font-size: 1.6em;
@@ -298,6 +310,10 @@ form:hover .script_infobox {
   background: -o-skin("Dialog Page Skin");
   padding: 1em;
   text-align: center;
+}
+
+#install_dialog form textarea {
+  display: none;
 }
 
 #install_dialog form p {

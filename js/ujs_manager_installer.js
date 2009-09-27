@@ -3,6 +3,7 @@
 // @include     *.js*
 // @version     0.2
 // @servicepath {{service_path}}
+// @uniqueid    {{unique_id}}
 // ==/UserScript==
 
 window.addEventListener(
@@ -88,8 +89,18 @@ window.addEventListener(
 
     function install_script(uri)
     {
+      var unique_id = '{{unique_id}}';
       var service_uri = '{{service_path}}';
-      location.href = service_uri + '?install_script=' + encodeURIComponent(uri);
+
+      var form = document.createElement('form');
+      form.action = service_uri;
+      form.method = 'post';
+      form.enctype = 'multipart/form-data';
+      form.innerHTML = '<textarea name="script_body">' +
+                       document.getElementsByTagName('pre')[0].textContent + '</textarea>' +
+                       '<input type="text" name="install_script" value="' + uri + '">' +
+                       '<input type="text" name="unique_id" value="' + unique_id +'">';
+      form.submit();
     }
   },
   false

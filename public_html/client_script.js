@@ -1,32 +1,54 @@
 var
-  currently_editing = null,
-  service_page = 'http://unite.opera.com/service/401/';
+  currently_editing = null;
 
 window.addEventListener(
   'load',
   function()
   {
-    Badge.show('Just testing badgie thing');
+    //Notifier.show('Just testing badgie thing');
+    var
+      i = 0,
+      elem = null;
 
     // add onchange handler to checkboxes
     var elems = document.selectNodes('//input[@type="checkbox"]');
-    for( var i=0,check; check=elems[i]; i++ )
+    for( i=0; elem=elems[i]; i++ )
     {
-      check.addEventListener('change', toggleScript, false);
+      elem.addEventListener('change', toggleScript, false);
+    }
+
+    // add click handler to expand script options
+    var elems = document.selectNodes('//form[@name]');
+    for( i=0; elem=elems[i]; i++ )
+    {
+      elem.addEventListener('click', toggleOptions, false);
     }
 
     // add handler to directory items
     elems = document.selectNodes('//button[@class="folder"]');
-    for( var i=0,check; check=elems[i]; i++ )
+    for( i=0; elem=elems[i]; i++ )
     {
-      check.addEventListener('click', changeDirectory, false);
+      elem.addEventListener('click', changeDirectory, false);
     }
 
     // add click handler to edit icons
     elems = document.selectNodes('//button[@class="edit"]');
-    for( var i=0,check; check=elems[i]; i++ )
+    for( i=0; elem=elems[i]; i++ )
     {
-      check.addEventListener('click', openSettings, false);
+      elem.addEventListener('click', openSettings, false);
+    }
+    // add click handler to delete button
+    elems = document.selectNodes('//button[@class="delete"]');
+    for( i=0; elem=elems[i]; i++ )
+    {
+      elem.addEventListener('click', deleteScript, false);
+    }
+
+    // add click handler to toggle button
+    elems = document.selectNodes('//button[@class="toggle"]');
+    for( i=0; elem=elems[i]; i++ )
+    {
+      elem.addEventListener('click', toggleScript, false);
     }
 
     // add handler for quick search
@@ -51,7 +73,7 @@ window.addEventListener(
 
 function $(id) { return document.getElementById(id); }
 
-var Badge = new function()
+var Notifier = new function()
 {
   var
     _el = null,
@@ -61,7 +83,7 @@ var Badge = new function()
     {
       if ( !_el ) init();
 
-      $('badge_msg').textContent = msg;
+      $('msg').textContent = msg;
 
       _el.style.display = 'block';
       _el.style.marginTop = -_el.scrollHeight+'px';
@@ -77,8 +99,8 @@ var Badge = new function()
 
   var init = function()
     {
-      _el = $('badge');
-      $('badge_close').onclick = animateUp;
+      _el = $('notifier');
+      $('close').onclick = animateUp;
     };
 
   var animateDown = function()
@@ -293,11 +315,70 @@ function closeEditDialog()
   $('edit_dialog').style.display = 'none';
 }
 
+function toggleOptions(ev)
+{
+  var
+    target = ev.target,
+    elem = this.selectSingleNode('descendant-or-self::div[@class="desc"]');
+
+  // only proceed when clicked on form or script name (UGLY HACK)
+  if ( !(target.className == 'name' || target.nodeName == 'FORM') )
+  {
+    return;
+  }
+
+  // roll up all open options
+  var elems = document.selectNodes('//div[@class="desc"]');
+  for ( var i=0; i<elems.length; i++ )
+  {
+    // skip clicked element (we want to be able to close expanded options)
+    if ( elem == elems[i] ) continue;
+    elems[i].style.display = 'none';
+  }
+
+  elem.style.display = ( elem.style.display != 'block' ? 'block' : 'none' );
+
+  ev.preventDefault();
+}
+
+function deleteScript(ev)
+{
+  var script_form = this.form;
+
+  if ( script_form.name && confirm('Do you really want to delete script:\n' +
+               decodeURIComponent(script_form.name) + '?') )
+  {
+    AjaxRequest.post(
+      {
+        parameters  :
+        {
+          action    : 'delete',
+          filename  : script_form.name
+        },
+        onSuccess   : function(req)
+                      {
+                        var obj = parse_response(req.responseText);
+                        if ( !obj.error )
+                        {
+                          script_form.parentNode.parentNode.removeChild(
+                            script_form.parentNode);
+                        }
+                        else
+                        {
+                          // revert previous checkbox state
+                          alert(obj.error);
+                        }
+                      }
+      }
+    );
+  }
+}
+
 function toggleScript(ev)
 {
   var script_form = ev.target.form;
 
-  ev.target.disabled = true;
+  script_form.check.disabled = true;
 
   AjaxRequest.post(
     {
@@ -305,7 +386,7 @@ function toggleScript(ev)
       {
         action    : 'toggle',
         filename  : script_form.name,
-        enable    : ev.target.checked
+        enable    : script_form.check.checked
       },
       onSuccess   : function(req)
                     {
@@ -313,16 +394,18 @@ function toggleScript(ev)
                       if ( !obj.error )
                       {
                         script_form.name = obj.result;
-                        //ev.target.nextSibling.data = " "+result.result;
+                        if ( ev.target.tagName == 'BUTTON' )
+                          ev.target.firstChild.className = ( obj.enabled ? 'disabled' : '' );
                       }
                       else
                       {
                         // revert previous checkbox state
-                        ev.target.checked = !ev.target.checked;
+                        //script_form.check.checked = !script_form.check.checked;
                         alert(obj.error);
                       }
 
-                      ev.target.disabled = false;
+                      script_form.check.checked = obj.enabled;
+                      script_form.check.disabled = false;
                     }
     }
   );
@@ -405,12 +488,12 @@ function filterScripts(text)
 
   text = text.toLowerCase();
 
-  var nodes = document.selectNodes('//ul/li/form/label/span/child::text()');
+  var nodes = $('scripts_list').selectNodes('descendant-or-self::span[@class="name"]');
   for (var i = 0, node; node=nodes[i]; i++) {
     if (node.textContent.toLowerCase().indexOf(text) == -1)
-      node.parentNode.parentNode.parentNode.style.display = 'none';
+      node.selectSingleNode('ancestor-or-self::li').style.display = 'none';
     else
-      node.parentNode.parentNode.parentNode.style.display = 'block';
+      node.selectSingleNode('ancestor-or-self::li').style.display = 'block';
   }
 }
 
