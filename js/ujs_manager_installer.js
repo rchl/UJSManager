@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        UJS Manager - script installer
 // @include     *.js*
-// @version     0.2
+// @version     0.3
 // @servicepath {{service_path}}
 // @uniqueid    {{unique_id}}
 // ==/UserScript==
@@ -66,14 +66,6 @@ window.addEventListener(
 
     var desc = document.createElement('span');
       desc.textContent = ' UJS Manager detected script file. It can be installed as a user script. ';
-
-    // we can't install from file://
-    if ( location.protocol == 'file:' )
-    {
-      desc.textContent = ' UJS Manager detected script file but it does not support '+
-        'installation from local filesystem. File has to be saved manually.';
-      install_but.disabled = true;
-    }
 
     badge.appendChild(close_but);
     badge.appendChild(install_but);
