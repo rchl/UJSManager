@@ -18,8 +18,8 @@ window.addEventListener(
       return;
 
     var badge = document.createElement('div');
-    badge.setAttribute('style', 'background:-o-skin("Content Block Toolbar Skin");' +
-        'padding:6px; font-family:Verdana,sans-serif; font-size:12px;');
+    badge.setAttribute('style', 'background:#ffffe1; color:#000; border:1px solid #c0c0c0;' +
+        'padding:5px; font-family:Verdana,sans-serif; font-size:12px;');
 
 
     badge.show = function()

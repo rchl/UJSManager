@@ -281,12 +281,8 @@ ul#scripts_list > li:nth-child(even) {
 
 #install_dialog {
   height: 200px;
-  position: absolute;
-  top: 50%;
-  margin-top: -150px;
   width: 500px;
-  left: 50%;
-  margin-left: -250px;
+  margin: 0 auto;
 }
 
 #install_dialog h1 {
@@ -301,7 +297,8 @@ ul#scripts_list > li:nth-child(even) {
   vertical-align: middle;
 }
 
-#install_dialog h1 div {
+#install_dialog h1 span {
+  display: block;
   font-size: 14px;
   text-align: right;
 }
@@ -324,7 +321,36 @@ ul#scripts_list > li:nth-child(even) {
   background: #FFA1A1;
 }
 
+#install_dialog table {
+  width: 100%;
+  border: none;
+}
+
+#install_dialog table td {
+  width: 50%;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+  vertical-align: top;
+}
+
+#install_dialog table th {
+  background: #000;
+  color: #fff;
+}
+
+#install_dialog table td > div{
+  overflow-x: auto;
+}
+
+.warning {
+  background: #ffffe1;
+  color: #000;
+  border: 1px solid #c0c0c0;
+  padding: 4px;
+}
+
 #footer {
-	text-align: center;
-	font-size: smaller;
+  text-align: center;
+  font-size: smaller;
 }

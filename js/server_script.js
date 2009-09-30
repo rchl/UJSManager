@@ -9,7 +9,7 @@ var
   SHARED_DIR = opera.io.filesystem.mountSystemDirectory('shared'),
   PUBLIC_DIR = opera.io.filesystem.mountSystemDirectory('application'),
   SERVICE_DOAP = 'http://unite.opera.com/service/doap/401/',
-  /* NOT FORGET TO UPDATE FOR EVERY RELEASE !!! */
+  /* DON'T FORGET TO UPDATE FOR EVERY RELEASE !!! */
   SERVICE_VERSION = '1.7',
   service_path = 'http://' + opera.io.webserver.hostName + opera.io.webserver.currentServicePath,
   static_files = [],
@@ -50,12 +50,37 @@ function handleRequest( event )
       }
 
       var tpldata = {
-        admin_url   : 'http://admin.' + request.host + opera.io.webserver.currentServicePath,
-        install_url : request.bodyItems['install_script'][0],
-        script_body : request.bodyItems['script_body'][0]
+        admin_url     : 'http://admin.' + request.host + opera.io.webserver.currentServicePath,
+        install_url   : request.bodyItems['install_script'][0],
+        script_body   : request.bodyItems['script_body'][0],
+        ask_overwrite : false,
+        old_header    : null,
+        new_header    : null
       };
-      var template = new Markuper( 'templates/dialog.html', tpldata );
 
+      // extract file name from path
+      var filename = tpldata.install_url.match(/.+\/([^/?]+)/);
+      if ( filename )
+      {
+        filename = filename[1];
+        // check if file already exists and ask for overwrite if yes
+        var existing_body = readFile(filename);
+        if ( existing_body !== null )
+        {
+          tpldata.ask_overwrite = true;
+          tpldata.old_header = getUserScriptHeader(existing_body);
+          tpldata.new_header = getUserScriptHeader(tpldata.script_body);
+
+        }
+      }
+      else
+      {
+        response.write( "Error. UJS Manager couldn't extract filename from path." );
+        response.close();
+        return;
+      }
+
+      var template = new Markuper( 'templates/dialog.html', tpldata );
       response.write( template.parse().html() );
       response.close();
       return;
@@ -68,19 +93,20 @@ function handleRequest( event )
 
   if ( request.bodyItems['install_script'] )
   {
-    var script_uri = decodeURIComponent(request.bodyItems['install_script'][0]);
-    var script_body = request.bodyItems['script_body'][0];
+    var
+      script_uri = decodeURIComponent(request.bodyItems.install_script[0]),
+      script_body = request.bodyItems.script_body[0],
+      overwrite = ( request.bodyItems.overwrite ? true : false ),
+      filename = script_uri.match(/.+\/([^/?]+)/);
 
-    // extract file name from path
-    var filename = script_uri.match(/.+\/([^/?]+)/);
-    if ( filename )
-      filename = filename[1];
+    // we are pretty sure that this above will match as it did in install dialog already
+    filename = filename[1];
 
-    // create user script file
+    // install file if there is none already
     widget.showNotification(
-      createFile(filename, script_body) ?
-        'User script installed "' + script_uri + '"'
-        : 'Error installing "' + script_uri + '"!'
+      createFile(filename, script_body, overwrite) ?
+        ( overwrite ? 'User script "' + filename + '" updated': 'User script "' + filename + '" installed' )
+        : 'Error installing "' + filename + '"!'
     );
 
     // redirect to admin part
@@ -362,6 +388,7 @@ function getUserScript(File)
 
 /**
   * creates key-value object from user script header
+  * @return object of key-value pairs
   */
 function getUserScriptHeader(content)
 {
@@ -406,10 +433,12 @@ function getUserScriptHeader(content)
   return (obj?obj:null);
 }
 
+/**
+  * gathers all settings from user script by looking for matching patters
+  * @return array of objects with specific keys
+  */
 function getScriptSettings(filename)
 {
-  var ret = [];
-
   var content = readFile(filename);
   if ( !content ) return false;
 
@@ -418,7 +447,10 @@ function getScriptSettings(filename)
   if ( !matches ) return false;
 
   // matches individual types of given option
-  var optionmatch = /^\/\*@([^@]+)@([^@]+)@\*\/(.*)\/\*@\*\/$/;
+  var
+    ret = [],
+    optionmatch = /^\/\*@([^@]+)@([^@]+)@\*\/(.*)\/\*@\*\/$/;
+
 
   /*
    * option object:
@@ -496,9 +528,9 @@ function writeFile(path, content)
   return false;
 }
 
-function createFile(path, content)
+function createFile(path, content, overwrite)
 {
-  if ( !(SHARED_DIR.resolve(path)).exists )
+  if ( overwrite || !(SHARED_DIR.resolve(path)).exists )
     return writeFile(path, content);
   return false;
 }

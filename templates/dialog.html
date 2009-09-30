@@ -8,17 +8,41 @@
 </head>
 <body>
   <div id="install_dialog">
-    <h1><img src="favicon.48x48.png"> UJS Manager <div>user script installation</div></h1>
+    <h1><img src="favicon.48x48.png"> UJS Manager <span>user script installation</span></h1>
     <form action="{{admin_url}}" method="post" enctype="multipart/form-data">
       <p>Are you sure you want to install user script from this location?</p>
       <code>{{install_url}}</code>
       <p>You should only install it if you trust that it's secure!</p>
       <input type="hidden" name="install_script" value="{{install_url}}">
       <textarea name="script_body">{{script_body}}</textarea>
+      <p class="warning" data-keep-if="ask_overwrite">Script with that name already
+        exists in your user scripts directory. It will be overwritten if you proceed.
+      </p>
       <p>
-        <button type="submit">Install script</button>
+        <input type="hidden" name="overwrite" value="1" data-keep-if="ask_overwrite">
+        <button type="submit" data-keep-if="ask_overwrite">Update script</button>
+        <button type="submit" data-remove-if="ask_overwrite">Install script</button>
         <button type="button" onclick="javascript:history.back()">Go back</button>
       </p>
+      <table data-keep-if="ask_overwrite">
+        <tr>
+          <th>current script header</th>
+          <th>new script header</th>
+        </tr>
+        <tr>
+          <td>
+            <div data-list="old_header">
+              <b data-keep-if="old_header[].key">{{old_header[].key}}</b>
+              {{old_header[].value}}
+            </div>
+          </td>
+          <td>
+            <div data-list="new_header">
+              <b data-keep-if="new_header[].key">{{new_header[].key}}</b>
+              {{new_header[].value}}
+            </div>
+          </td>
+      </table>
     </form>
   </div>
 </body>
