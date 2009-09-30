@@ -52,7 +52,10 @@ window.addEventListener(
     }
 
     elem = $('close_notifier');
-    elem.addEventListener('click', remindMeLater, false);
+    if ( elem )
+    {
+      elem.addEventListener('click', remindMeLater, false);
+    }
 
     // add handler for quick search
     var qf = document.selectSingleNode('//input[@id="quickfind"]');
