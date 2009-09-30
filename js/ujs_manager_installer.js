@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        UJS Manager - script installer
 // @include     *.js*
-// @version     0.3
+// @version     0.4
 // @servicepath {{service_path}}
 // @uniqueid    {{unique_id}}
 // ==/UserScript==

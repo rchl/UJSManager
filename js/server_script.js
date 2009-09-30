@@ -10,7 +10,7 @@ var
   PUBLIC_DIR = opera.io.filesystem.mountSystemDirectory('application'),
   SERVICE_DOAP = 'http://unite.opera.com/service/doap/401/',
   /* NOT FORGET TO UPDATE FOR EVERY RELEASE !!! */
-  SERVICE_VERSION = '1.6',
+  SERVICE_VERSION = '1.7',
   service_path = 'http://' + opera.io.webserver.hostName + opera.io.webserver.currentServicePath,
   static_files = [],
   data = { scripts: getAllUserScripts(null, true) };
@@ -82,12 +82,6 @@ function handleRequest( event )
         'User script installed "' + script_uri + '"'
         : 'Error installing "' + script_uri + '"!'
     );
-
-    // redirect back to file
-    response.setStatusCode('303');
-    response.setResponseHeader('Location', request.bodyItems['install_script'][0]);
-    response.close();
-    return;
 
     // redirect to admin part
     response.setStatusCode('303');
@@ -294,7 +288,8 @@ function getAllUserScripts(requested_dir, istopdir)
 
     if ( !ujs_installer
         || scr_installer.header.version > ujs_installer.header.version
-        || ujs_installer.header.servicepath != service_path )
+        || ujs_installer.header.servicepath != service_path
+        || ujs_installer.header.uniqueid != getPref('unique_id') )
     {
       // add user js installer to list because it wasn't there when reading dir
       if ( !ujs_installer )
@@ -556,12 +551,12 @@ function downloadScript(uri)
   return createFile(filename, xhr.responseText);
 }
 
-var savePref = function(key, val)
+function savePref(key, val)
 {
   return widget.setPreferenceForKey(encodeURIComponent(val), key);
 }
 
-var getPref = function(name)
+function getPref(name)
 {
   return decodeURIComponent(widget.preferenceForKey(name))||null;
 }
