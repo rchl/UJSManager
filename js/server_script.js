@@ -68,8 +68,8 @@ function handleRequest( event )
         if ( existing_body !== null )
         {
           tpldata.ask_overwrite = true;
-          tpldata.old_header = getUserScriptHeader(existing_body);
-          tpldata.new_header = getUserScriptHeader(tpldata.script_body);
+          tpldata.old_header = getUserScriptHeader(existing_body)||{'<missing>':''};
+          tpldata.new_header = getUserScriptHeader(tpldata.script_body)||{'<missing>':''};
 
         }
       }
