@@ -10,7 +10,7 @@ var
   PUBLIC_DIR = opera.io.filesystem.mountSystemDirectory('application'),
   SERVICE_DOAP = 'http://unite.opera.com/service/doap/401/',
   /* DON'T FORGET TO UPDATE FOR EVERY RELEASE !!! */
-  SERVICE_VERSION = '1.7',
+  SERVICE_VERSION = '1.8',
   service_path = 'http://' + opera.io.webserver.hostName + opera.io.webserver.currentServicePath,
   static_files = [],
   data = { scripts: getAllUserScripts(null, true) };
@@ -86,7 +86,10 @@ function handleRequest( event )
       return;
     }
 
-    response.write( "UJS Manager is made to be only accessible from Opera running this service." );
+    response.write(
+      'UJS Manager is made to be only accessible from Opera running this service.<br>' +
+      'If you are the owner of this service, go to <a href="http://admin.' + request.host + opera.io.webserver.currentServicePath + '">Admin section</a>.'
+    );
     response.close();
     return;
   }
@@ -135,10 +138,13 @@ function handleRequest( event )
     istopdir = false;
   }
 
-  data.scripts = getAllUserScripts(dir_query, istopdir);
-  var template = new Markuper( 'templates/tpl.html', data );
+  data = {
+    scripts     : getAllUserScripts(dir_query, istopdir),
+    version     : SERVICE_VERSION,
+    newversion  : updater.checkUpdate()
+  }
 
-  data.newversion = updater.checkUpdate();
+  var template = new Markuper( 'templates/tpl.html', data );
 
   response.write( template.parse().html() );
   response.close();
