@@ -19,27 +19,27 @@
   <ul id="scripts_list">
     <li data-list="scripts">
       <form name="{{scripts[].filename}}">
-        <button type="button" class="edit" data-keep-if="scripts[].hassettings"
+        <button type="button" class="edit noskin" data-keep-if="scripts[].hassettings"
           title="Edit script settings"><img></button>
         <span data-keep-if="scripts[].isdirectory">
           <button type="button" class="folder"><img> {{scripts[].prettyname}}</button>
         </span>
         <span data-remove-if="scripts[].isdirectory">
-          <input type="checkbox" name="check" data-remove-if="scripts[].isenabled">
-          <input type="checkbox" name="check"  data-keep-if="scripts[].isenabled" checked="checked">
+          <button type="button" name="check" class="toggle noskin"><img class="disabled"
+            data-keep-if="scripts[].isenabled"><img data-remove-if="scripts[].isenabled"></button>
           <span class="name">{{scripts[].prettyname}}</span>
           <div class="desc">
             <div class="script_infobox" data-keep-if="scripts[].header">
               <p data-list="scripts[].header">
                 <b data-keep-if="scripts[].header[].key">{{scripts[].header[].key}}</b>
-                {{scripts[].header[].value}}
+                <span title="{{scripts[].header[].value}}">{{scripts[].header[].value}}</span>
               </p>
             </div>
             <div>
+              <button type="button" class="delete" title="Delete"><img></button>
               <button type="button" class="toggle"><img class="disabled"
-                data-keep-if="scripts[].isenabled"><img data-remove-if="scripts[].isenabled">
-                Toggle</button>
-              <button type="button" class="delete"><img> Delete</button>
+                data-keep-if="scripts[].isenabled"><img data-remove-if="scripts[].isenabled">Toggle</button>
+              <button type="button" class="edittxt"><img>Edit</button>
             </div>
           </div>
         </span>
@@ -57,6 +57,7 @@
   <div id="edit_dialog">
     <form onsubmit="saveEditedSetting(this);return false;">
       <textarea id="edit_field"></textarea>
+      <span id="edit_msg"></span>
       <button>Save</button>
       <button onclick="closeEditDialog();return false;">Cancel</button>
   </div>

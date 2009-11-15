@@ -10,7 +10,7 @@ var
   PUBLIC_DIR = opera.io.filesystem.mountSystemDirectory('application'),
   SERVICE_DOAP = 'http://unite.opera.com/service/doap/401/',
   /* DON'T FORGET TO UPDATE FOR EVERY RELEASE !!! */
-  SERVICE_VERSION = '1.8',
+  SERVICE_VERSION = '1.9',
   service_path = 'http://' + opera.io.webserver.hostName + opera.io.webserver.currentServicePath,
   static_files = [],
   data = { scripts: getAllUserScripts(null, true) };
@@ -189,7 +189,7 @@ function handleXHRQuery(query)
         else
         {
           return {
-            error: "Error. Script with file name " + newpath + " already exists!",
+            error: "Error. Script with file name " + newpath.replace(/.*\/([^\/]+)$/, '$1') + " already exists!",
             enabled: !enabled
           };
         }
@@ -213,6 +213,10 @@ function handleXHRQuery(query)
     case 'delete':
       var result = deleteFile(q_filename);
       return result||{error: 'Deleting file failed!'};
+    case 'readtxt':
+      return readFile(q_filename)||{error: "Wasn't able to read file or file empty!"}
+    case 'writetxt':
+      return writeFile(q_filename, query['data'][0])||{error: "Wasn't able to write file or file does not exist!"}
     case 'remindmelater':
       updater.remindMeLater();
       return true;
@@ -386,7 +390,7 @@ function getUserScript(File)
     if ( obj.header )
     {
       // try to get pretty name
-      obj.prettyname = obj.header.name||obj.prettyname;
+      obj.prettyname = getPropOfArrayItem('name', obj.header)||obj.prettyname;
     }
   }
   return obj;
@@ -422,7 +426,7 @@ function getUserScriptHeader(content)
     line,
     rgx_match = null,
     line_rgx = /^@(.+?)\s+(.+)/,
-    obj = {};
+    data = [];
 
   for ( var i=0; i<lines.length; i++ )
   {
@@ -433,10 +437,11 @@ function getUserScriptHeader(content)
     rgx_match = line.match(line_rgx);
     if ( rgx_match && rgx_match.length > 1 )
     {
-      obj[rgx_match[1]] = rgx_match[2];
+      var name = rgx_match[1], val = rgx_match[2];
+      data.push( { key: name, value: trim(val) } );
     }
   }
-  return (obj?obj:null);
+  return (data?data:null);
 }
 
 /**
@@ -676,4 +681,19 @@ var updater = new function()
     savePref('latestVer', latest_ver=SERVICE_VERSION);
     savePref('lastCheck', last_check=new Date().getTime());
   }
+}
+
+function getPropOfArrayItem(prop, arr)
+{
+  for (var i=0; i<arr.length; i++)
+  {
+    if (arr[i].key==prop)
+      return arr[i].value;
+  }
+  return null;
+}
+
+function trim(str)
+{
+  return str.replace(/^[\s\-]+|\s+$/, '');
 }

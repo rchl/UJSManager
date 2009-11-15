@@ -2,8 +2,8 @@ var currently_editing = null;
 
 $(document).ready(function() {
   // add onchange handler to checkboxes
-  $('input[type="checkbox"]').each(function() {
-    $(this).change(toggleScript);
+  $('button[name="check"]').each(function() {
+    $(this).click(toggleScript);
   });
 
   // add click handler to expand script options
@@ -12,38 +12,57 @@ $(document).ready(function() {
   });
 
   // add handler to directory items
-  $('button[class="folder"]').each(function() {
+  $('button.folder').each(function() {
     $(this).click(changeDirectory);
   });
 
   // add click handler to edit icons
-  $('button[class="edit"]').each(function() {
-    $(this).click(openSettings);
+  $('button.edit').each(function() {
+    $(this).click(getScriptSettings);
   });
 
   // add click handler to delete button
-  $('button[class="delete"]').each(function() {
+  $('button.delete').each(function() {
     $(this).click(deleteScript);
   });
 
   // add click handler to toggle button
-  $('button[class="toggle"]').each(function() {
+  $('button.toggle').each(function() {
     $(this).click(toggleScript);
+  });
+
+  // add click handler to edit script text button
+  $('button.edittxt').each(function() {
+    $(this).click(editScriptText);
   });
 
   $('#close_notifier').click(remindMeLater);
 
   // add handler for quick search
-  $('input[id="quickfind"]').bind('focus input', function(e) {
+  $('#quickfind').bind('focus input', function(e) {
       if (e.type == 'focus')
       {
-        if (this.value == 'Quick find') this.value = '';
+        if (this.value == 'Quick find')
+          this.value = '';
       }
       else
       {
         filterScripts(this.value);
       }
   });
+
+  // perform action if specified
+  var action;
+  if ((action = location.hash.match(/^#([^&]+)$/)))
+  {
+    action = RegExp.$1.split('=');
+    if (action[0] == 'edittxt')
+    {
+      editScriptText($('form[name="'+action[1]+'"]').get(0));
+      location.hash = '';
+    }
+  }
+
 });
 
 function remindMeLater()
@@ -51,14 +70,14 @@ function remindMeLater()
   var close_button = this;
 
   $.post('', { action: 'remindmelater' },
-    function(data)
+    function()
     {
       // hide notifier
       $(close_button).parent().slideUp('normal');
     });
 }
 
-function openSettings(ev)
+function getScriptSettings(ev)
 {
   var script_form = ev.target.form;
 
@@ -128,8 +147,8 @@ function buildOption(op, index)
     case 'regexp':
       el = document.createElement('span');
       el.className = 'setting_elem';
+      el.onclick = function(){ openEditDialog(this, this.value, saveEditedSetting); }
       el.type = 'text';
-      el.onclick = editSetting;
       el.value = el.title = op.value;
       el.textContent = op.value;
       break;
@@ -142,9 +161,8 @@ function buildOption(op, index)
   var indent_lev = op.name.match(/^_+/);
   if ( indent_lev )
   {
-    indent_lev = indent_lev[0].length;
     op.name = op.name.replace(/^_+/,'');
-    ul.className = 'indent'+indent_lev;
+    ul.className = 'indent'+indent_lev[0].length;
   }
 
   li = document.createElement('li');
@@ -164,24 +182,26 @@ function buildOption(op, index)
   return cont.appendChild(ul);
 }
 
-function editSetting(ev)
+function openEditDialog(element, data, save_callback)
 {
-  $('#settings_container').animate( {left: '-100%'} );
   // don't know how to set property (not attribute) for element in jquery
   var edit_field = $('#edit_field').get(0);
-  edit_field.value = ev.target.value; edit_field.related = ev.target;
+  edit_field.value = data;
+  edit_field.related = element;
+  edit_field.form.onsubmit = function(e){ save_callback(e); return false; };
   $('#edit_dialog').animate( { left: '0px' } );
 }
 
 function closeEditDialog()
 {
-  $('#settings_container').animate( {left: '0'} );
   $('#edit_field').attr( { value: '' } );
+  $('#edit_msg').empty();
   $('#edit_dialog').animate( { left: '100%' } );
 }
 
-function saveEditedSetting(form)
+function saveEditedSetting(ev)
 {
+  var form = ev.target;
   form.edit_field.disabled = true;
   form.edit_field.value =
     form.edit_field.value.replace(/[\r\n]+/g, '');
@@ -275,6 +295,54 @@ function toggleScript(ev)
     }, 'json');
 }
 
+function editScriptText(ev)
+{
+  if (!ev) return;
+
+  var script_form;
+  if (ev instanceof HTMLElement)
+    script_form = ev;
+  else
+    script_form = ev.target.form;
+
+  $.post('', { action: 'readtxt', filename: script_form.name },
+    function(data)
+    {
+      if (!data.error)
+      {
+        $('#edit_msg').html( 'Experimental! Please backup before saving.<br><a href="#edittxt='+script_form.name+'" target="_blank">click to open in new window</a><br><br>' );
+        openEditDialog(script_form, data, saveScriptText);
+      }
+      else
+      {
+        alert(data.error);
+      }
+    }, 'json');
+}
+
+function saveScriptText(ev)
+{
+  var edit_field = ev.target.edit_field;
+
+  // have to post in hidden iframe as XHR can't handle multipart/form-data
+  var ifr = $('<iframe style="display:none" src="about:blank"></iframe>')[0];
+  var form = $(
+    '<form method="POST" action="' + location.protocol + '//' + location.hostname + location.pathname + '" enctype="multipart/form-data">'+
+      '<textarea name="data">' + edit_field.value + '</textarea>'+
+      '<input name="action" value="writetxt">'+
+      '<input name="filename" value="' + edit_field.related.name + '">'+
+    '</form>'
+  )[0];
+  ifr.onload = function()
+  {
+    ifr.onload = function(){ ifr.parentNode.removeChild(ifr); }
+    ifr.contentDocument.body.appendChild(form);
+    form.submit();
+    closeEditDialog();
+  }
+  document.documentElement.appendChild(ifr);
+}
+
 function changeDirectory(ev)
 {
   location.href = location.pathname + '?dir=' + ev.target.form.name;
@@ -285,7 +353,7 @@ function changeSetting(ev)
   if ( !currently_editing )
     return;
 
-  var val = null;
+  var val;
 
   switch(ev.target.type)
   {
@@ -334,7 +402,7 @@ function filterScripts(text)
 
   text = text.toLowerCase();
 
-  $('#scripts_list span[class="name"]').each(function() {
+  $('#scripts_list span.name').each(function() {
     if (this.textContent.toLowerCase().indexOf(text) == -1 && !show_all)
       this.selectSingleNode('ancestor-or-self::li').style.display = 'none';
     else

@@ -31,7 +31,7 @@
   * Template library.
   *
   * @author António Afonso, Opera Software ASA (antonio.afonso@opera.com)
-  * @version 0.4
+  * @version 0.5
   */
 
 /**
@@ -268,7 +268,7 @@ markuper.looksLikeArray = function( obj )
     return  obj instanceof Object
             && !(obj instanceof Node)
             && typeof( obj ) !== 'string'
-            && typeof( obj[0] ) !== 'undefined';
+            && (typeof( obj[0] ) !== 'undefined' || obj.length == 0)
 }
 
 /**
@@ -333,7 +333,7 @@ markuper.setData = function( data, key, value )
         data = markuper.getData( data, keysClone.join('.') );
     }
 
-    if ( !(data instanceof Object) ) { debugger; return };
+    if ( !(data instanceof Object) ) { return };
 
     if ( value === null )
     {
@@ -427,7 +427,7 @@ markuper.splitWithDelimiters = function( str, regexp )
         result.push( match );
         lastIndex = offset + match.length;
     });
-    if( lastIndex < str.length-1 ) result.push( str.substr( lastIndex ) );
+    if( lastIndex < str.length ) result.push( str.substr( lastIndex ) );
     
     return result;
 }
@@ -497,7 +497,7 @@ markuper.evaluator.operatorsRegExp = (function()
 })();
 
 /** 
- * A wrapper for {@link markuper.getData} with support for 'true' and 'false' values
+ * A wrapper for {@link markuper.getData} with support for 'true' and 'false', strings, numbers and literal arrays.
  * 
  * @param   {Object}    data    The data object.
  * @param   {String}    key     The index for the <code>data</code> object.
@@ -505,14 +505,141 @@ markuper.evaluator.operatorsRegExp = (function()
  */
 markuper.getValue = function( data, key )
 {
-    var bools = {'true': true, 'false': false};
-    if( key.toLowerCase() in bools ) { return bools[key.toLowerCase()]; };
+    if( key === undefined || key === null ) { return; }
     
+    var bools = {'true': true, 'false': false};
+    // is it a boolean value?
+    if( key.toLowerCase() in bools ) { return bools[key.toLowerCase()]; };
+    // is it a string?
+    if( key.trim().match(/^%27(.*)%27$/) )
+    {
+        return markuper.unescapeString(RegExp.$1)
+                       .replace( /\\(.)/g,  '$1' );
+    };
+    // is it a number?
+    var number = Number( key );
+    if( key.trim() != "" && !isNaN(number) ) { return number; }
+    // is it an array?
+    if( key.trim().match(/^\[.*\]$/) )
+    {
+        return markuper.evaluator.evalArrayExpression( key, data );
+    }
+    
+    // TODO: make this the first item
     return markuper.getData( data, key );
 }
 
+/**
+ * This helper function escapes all the strings - sequences of characters delimited by single quotes - found including their single quotes delimiters using the <code>escape</code> function.
+ *
+ * @see unescapeString
+ */
+markuper.escapeStrings = function( expr )
+{
+    return expr && expr.replace( /'(\\.|[^'])*'/g, function( str )
+    {
+        return escape(str);
+    });
+}
+
+/**
+ * This helper function unescapes a string previously escaped by {@link escapeStrings}.
+ *
+ * @see escapeStrings
+ */
+markuper.unescapeString = function( string )
+{
+    return unescape(string);
+    //return string.replace( /%27.*%27/, function(str){return(unescape(str))} );
+}
+
+/**
+ * @field Dictionary of registered filters
+ */
+markuper.evaluator.filters = {};
+
+/**
+ * Registers a filter to be used in <code>{{}}</code> constructions.
+ *
+ * Filters are one-parameter functions that can transform their input by returning any desired value and are meant to be used inside <code>{{}}</code> constructions as a way to perform text transformations.
+ * <p>Filters are used by prefixing them with a pipe '|' character.</p>
+ * <pre><code>{{data.key|filter}}</code></pre>
+ * The result of the evaluation of the expression that stands at the left of the pipe will be the input of the filter. The value of the expression after the filter is executed will then be the output of the filter.
+ * It is also possible to concatenate several filters in a row
+ * <pre><code>{{data.key|filter1|filter2|filtern}}</code></pre>
+ * where the input of filter n+1 will be the output of filter n.
+ *
+ * Registered filters will automatically be handled by the function {@link #fillValues} while parsing text.
+ *
+ * <p>The callback function <code>fn</code> will be called with the following arguments:
+ * <ul>
+ *   <li><code>input</code>: the data to be transformed.</li>
+ * </ul></p>
+ *
+ * @param {String}      attribute   The filter name, this will be the name recognized inside <code>{{}}</code> constructions.
+ * @param {Function}    fn          The callback function to be called when processing the filter.
+ *
+ * @see #fillValues
+ */
+markuper.evaluator.registerFilter = function( name, fn )
+{
+    markuper.evaluator.filters[name] = fn;
+};
+
+/**
+ * Registers all built-in filters.
+ *
+ * @inner
+ */
+(function setupFilters()
+{
+    markuper.evaluator.registerFilter( 'escape', function( input )
+    {
+        if( typeof(input) != 'string' ) { return input; };
+        
+        return input.replace(/'/g, "&#39;").replace(/"/g, "&quot;")
+                    .replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                    .replace(/&/g, "&amp;");
+    });
+    
+    markuper.evaluator.registerFilter( 'escapejs', function( input )
+    {
+        if( typeof(input) != 'string' ) { return input; };
+        
+        return input.replace(/'/g, "&#39;").replace(/"/g, "&quot;")
+                    .replace(/\./g, '\\$&').replace(/\n/g, "\\n");
+    });
+
+    markuper.evaluator.registerFilter('urlencode', function(input) {
+        if( typeof(input) != 'string' ) { return input; };
+
+        return escape(input);
+    });
+    
+    markuper.evaluator.registerFilter('node', function(input) {
+        if( typeof(input) != 'string' ) { return input; };
+        
+        var div = document.createElement('div');
+        div.innerHTML = input;
+        return div.childNodes;
+    });
+})();
+
+// FIXME: needs refactoring with a sane BNF definition.
 markuper.evaluator.evalExpression = function( expr, data )
 {
+    if( expr === null || expr === undefined ) { return expr; }
+    
+    var value;
+    var registeredFilters = markuper.evaluator.filters;
+    expr = markuper.escapeStrings( expr );
+    
+    // support for filters: [|func]*
+    var filters = expr.split('|');
+    // remove the first element which is the expression, only filters
+    // will remain
+    expr = filters.shift();
+    
     // support for the ternary operator
     if( typeof expr == 'string' 
      && expr.match( /(.+)\s+\?\s+([^\s]+)(?:\s+:\s+([^\s]+))?/ ) )
@@ -521,15 +648,30 @@ markuper.evaluator.evalExpression = function( expr, data )
         var ifFalse = RegExp.$3;
         var boolExpr = markuper.evaluator.evalBooleanExpression( RegExp.$1, data );
         
-        return boolExpr ? arguments.callee(ifTrue, data) : arguments.callee(ifFalse, data);
+        value = boolExpr ? arguments.callee(ifTrue, data) : arguments.callee(ifFalse, data);
+    }
+    else
+    {
+        //return markuper.getData( data, expr );
+        value = markuper.getValue( data, expr );
     }
     
-    return markuper.getData( data, expr );
+    // apply filters
+    for( var i = 0, filter; filter = (filters[i]||'').trim(); i++ )
+    {
+        if( !(filter in registeredFilters) )
+        {
+            throw {message: "Filter not found: " + filter};
+        }
+        value = registeredFilters[filter]( value, expr );
+    }
+    
+    return value;
 }
 
 /**
  * Evaluates a simple boolean expression.
- * <p>A simple boolean expression is just like a boolean expression definined in {@link #.evalBooleanExpression} minus the grouping elements, or in other words, without parenthensis</p>.
+ * <p>A simple boolean expression is just like a boolean expression defined in {@link #.evalBooleanExpression} minus the grouping elements, or in other words, without parenthensis</p>.
  * <b>Operators List</b>
  * <table>
  *   <tr>
@@ -624,6 +766,7 @@ markuper.evaluator.evalBooleanSimpleExpression = function( expr, data )
  */
 markuper.evaluator.evalBooleanExpression = function( expr, data )
 {
+    var expr = markuper.escapeStrings( expr );
     // WARNING: it doesn't short-circuit
     // find the deepest group and substitute it for its value
     // repeat until no more groups are found
@@ -638,6 +781,46 @@ markuper.evaluator.evalBooleanExpression = function( expr, data )
     }
 
     return markuper.evaluator.evalBooleanSimpleExpression( expr, data );
+}
+
+/**
+ * Evaluates a literal array construction given in a string into a javascript array object.
+ *
+ * @param   {String}    expr    The string with the literal array.
+ * @param   {Object}    data    The data object to be indexed with the keys found in the <code>expr</code> expression.
+ * @returns {Array}             The array obtained after parsing  <code>expr</code>.
+ */
+markuper.evaluator.evalArrayExpression = function( expr, data )
+{
+    var expr = markuper.escapeStrings( expr );
+    // find the deepest group and evaluate it and store the value in a stack
+    // repeat until no more groups are found
+    var regexp = /\[([^\[\]]*)\]/g;
+    var stack = [];
+    var args;
+    
+    while( expr.search(regexp) > -1 )
+    {
+        expr = expr.replace( regexp, function( str, p1 )
+        {
+            args = p1.trim() == "" ? [] : p1.split(",");
+            for( var i = 0; i < args.length; i++ )
+            {
+                if( args[i].trim() == "" )
+                {
+                    args[i] = stack.shift();
+                }
+                else
+                {
+                    args[i] = markuper.evaluator.evalExpression( args[i], data );
+                }
+            }
+            stack.push( args );
+            return "";
+        });
+    }
+
+    return args;
 }
 
 /**
@@ -680,6 +863,17 @@ markuper.hasParentWithDataAttribute = function( node, attrs, root )
  *   <li>Objects - like arrays, objects can also be bounded to nodes via <code>data-list</code>. A new, cloned, node will be created for each object proerty, and each node will have access to the respective object property.</li>
  *   <li>Booleans - boolean values can be binded to a node with <code>data-remove-if</code> and <code>data-keep-if</code> in order to specify if the node has to be deleted or not.</li>
  * </ul>
+ * <p>Simple variables can also be filtered through functions using the pipe operator '|'.</p>
+ * <b>Example:</b><br>
+ * <pre class="code">
+ * &ltp&gt;{{key|capitalize}}&lt/p&gt;
+ * </pre>
+ * These helper functions are called filters. It's possible to create filters with the {@link #registerFilter} function.
+ * <pre class="code">
+ * tmpl.registerFilter( 'capitalize', function(input)
+ *{
+ *return input[0].toUpperCase() + input.slice(1);
+ *})</pre>
  * <p>While iterating over arrays or objects, using one of the two methods mentioned above, the contents of each element/property will be available under the key <code><nobr>"&lt;data-list&gt;[]"</nobr></code>. In the case of an object property the element available will be in the <code>{key, value}</code> form.</p>
  * <p>These values are passed along in the constructor in the form of a data object, e.g. <code>{key1: 'value1', key2: 'value2'}</code></p>
  *
@@ -789,12 +983,13 @@ markuper.hasParentWithDataAttribute = function( node, attrs, root )
  * @param {String}  path                        The path to the template file, should be relative to <code>/application/</code>.
  * @param {Object}  _data                       The object that will be exposed to the template inside the <code>{{key}}</code> elements.
  * @param {Object}  [options]                   The object that contains certain specific options that can modify the behaviour of the contructor.
+ * @param {String}  [options.type]              The type of document 'text'|'xml'
  */
 markuper.Template = function( path, _data, options )
 {
     var _template;
     var _lists      = [];
-    var _html       = null;
+    var _source     = null;
     var self        = this;
     var _dataAttributes = {};
     var _dataAttributesName = [];
@@ -817,17 +1012,19 @@ markuper.Template = function( path, _data, options )
     function init( path )
     {
         applyDefaults( options );
-
+        
         if( path )
         {
-            var success = open( path );
+            _source = open( path );
         }
         else
         {
-            _html = _options.html || '';
+            _source = _options.html || _options.source || '';
             self.reset();
         }
-        if(success === null) return;
+        
+        //if(success === null) return;
+        _template = createDocument( _source, _options.type );
         setupDataAttributes();
     }
 
@@ -847,10 +1044,10 @@ markuper.Template = function( path, _data, options )
     }
     
     /**
-     * Opens <code>path</code> for reading and creates a DOM document with its contents
+     * Opens <code>path</code> for reading and returns its contents.
      *
      * @param   {String}    path    The path to the template file, should be relative to <code>/application/</code>.
-     * @returns {DOM}               The DOM document created.
+     * @returns {String}               The contents read.
      *
      * @inner
      */
@@ -860,22 +1057,44 @@ markuper.Template = function( path, _data, options )
         {
             throw "Exception: File I/O (opera.io) not available";
         }
-        // TODO: test if exists
+        
         var mp = opera.io.filesystem.mountSystemDirectory( 'application' );
-        try{
-            var stream = mp.open( path, 'r' );
-        } catch (e){
-            //opera.postError(e);
-            return null;
-        }
-        _html = stream.read( stream.bytesAvailable ).trim();
-
+        var stream = mp.open( path, 'r' );
+        var source = stream.read( stream.bytesAvailable ).trim();
+        
         stream.close();
-        _template = markuper.HTMLHelper.parseFromString( _html );
+        
+        return source;
+    }
+    
+    function createDocument( string, type )
+    {
+        var doc;
+        
+        // try to guess...
+        if( !type )
+        {
+            if( /^<\?xml/.test(string) ) { type = 'xml'; }
+        }
+        
+        switch( type )
+        {
+            case 'text':
+                doc = markuper.HTMLHelper.parseFromString( '<pre id="text"></pre>' );
+                doc.getElementById('text').textContent = string;
+                break;
+                
+            case 'xml':
+                doc = new DOMParser().parseFromString(string, 'text/xml');
+                break;
+                
+            default:
+                doc = markuper.HTMLHelper.parseFromString( string );
+                break;
+        }
+        
 
-//        opera.postError('template ' + path + ' loaded');
-
-        return _template;
+        return doc;
     }
     
     /**
@@ -938,6 +1157,20 @@ markuper.Template = function( path, _data, options )
         });
     }
     
+    /**
+     * Function logic of the <code>data-set-*-attribute</code> registered data attribute.
+     *
+     * Evaluates <code>expr</code>, if its value is not <code>undefined</code> the add an attribute to <code>node</code> with name <code>name</code> and the <code>expr</code> evaluation as the value.
+     *
+     * @param   {Node}      node    The node with the <code>data-set-*-attribute</code>.
+     * @param   {String}    name    The attribute name
+     * @param   {String}    expr    The expression found as the value of the attribute.
+     * @param   {Object}    data    The data object to be indexed with the keys found in the <code>expr</code> expression.
+     * @returns {Boolean}           <code>true</code> if the attribute was added, <code>false</code> otherwise.
+     *
+     * @see #setupDataAttributes
+     * @inner
+     */
     function setAttribute( node, name, expr, data )
     {
         var value = markuper.evaluator.evalExpression( expr, data );
@@ -1035,7 +1268,7 @@ markuper.Template = function( path, _data, options )
             
             var value = attribute.replace( /\*/g, '[^=]+?' );
             var regexp = new RegExp( '\\bdata-'+value+'(?==)', 'g' );
-            var matches = _html.match( regexp ) || [];
+            var matches = _source.match( regexp ) || [];
             
             for( var i = 0, attr; attr = matches[i]; i++ )
             {
@@ -1044,6 +1277,13 @@ markuper.Template = function( path, _data, options )
         }
     }
 
+    /**
+     * Returns an array of all registered attributes' names
+     *
+     * @returns {Array} The attributes' names
+     *
+     * @see #registerDataAttribute
+     */
     this.getRegisteredDataAttributes = function()
     {
         return _dataAttributesName.slice(0);
@@ -1205,15 +1445,16 @@ markuper.Template = function( path, _data, options )
         root = root || _template;
         parseRootAttributes = parseRootAttributes == undefined ? false : parseRootAttributes;
 
-        var xpathText       = ".//text()[contains(.,'{{')]",
-            xpathAttrs      = ".//*/@*[contains(.,'{{')]",
-            xpathSelfAttrs = "./@*[contains(.,'{{')]",
-            nodes           = this.xpath( xpathText + '|' + xpathAttrs + (parseRootAttributes ? ('|'+xpathSelfAttrs) : ''), root );
+        var xpathText           = ".//text()[contains(.,'{{')]",
+            xpathAttrs          = ".//*/@*[contains(.,'{{')]",
+            xpathTextComments   = ".//comment()[contains(.,'{{')]",
+            xpathSelfAttrs      = "./@*[contains(.,'{{')]",
+            nodes               = this.xpath( xpathText + '|' + xpathTextComments + '|' + xpathAttrs + (parseRootAttributes ? ('|'+xpathSelfAttrs) : ''), root );
 
         for( var i = 0, node; node = nodes[i]; i++ )
         {
             // see CORE-18198
-            if ( !(node instanceof Text || node instanceof Attr) )
+            if ( !(node instanceof Text || node instanceof Comment || node instanceof Attr) )
             {
                 continue;
             }
@@ -1449,6 +1690,7 @@ markuper.Template = function( path, _data, options )
             var item = extendElement( list.cloneNode( true ) );
             
             list.parentNode.insertBefore( item, list );
+            //list.parentNode.insertBefore( document.createTextNode( '\n' ), list );
             if( fn ) { fn(item, i) };
         }
 
@@ -1612,10 +1854,26 @@ markuper.Template = function( path, _data, options )
         return markuper.HTMLHelper.serializeToString( _template );
     }
 
+    /**
+     * Constructs an text-only representation of the template's current state.
+     *
+     * @returns {String}    The text representation of the template.
+     */
     this.text = function()
     {
         return _template.body.innerText;
     }
+
+    /**
+     * Returns the document in an XML string.
+     *
+     * @returns {String}    The XML string.
+     */
+    this.xml = function()
+    {
+        return new XMLSerializer().serializeToString(_template);
+    }
+    
 
     /**
      * Finds elements using a CSS3 selector {@link http://www.w3.org/TR/css3-selectors/}.
@@ -1666,13 +1924,18 @@ markuper.Template = function( path, _data, options )
      */
     this.reset = function( data )
     {
-        _template   = markuper.HTMLHelper.parseFromString( _html );
+        _template = createDocument( _source, _options.type );
         _data       = data || _data;
     }
 
+    /**
+     * Returns the original, unparsed, string obtained used to instantiate this object.
+     *
+     * @returns {String}    The unparsed string.
+     */
     this.getUnparsedHtml = function()
     {
-        return _html;
+        return _source;
     }
 
     // ensure that all this.functions have already been defined

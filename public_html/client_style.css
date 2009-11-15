@@ -117,6 +117,10 @@ ul#scripts_list > li:nth-child(even) {
   vertical-align: text-bottom;
 }
 
+#scripts_list .delete {
+  float: right;
+}
+
 #scripts_list .delete img {
   content: -o-skin("Trash");
 }
@@ -138,18 +142,26 @@ ul#scripts_list > li:nth-child(even) {
   content: -o-skin("Folder");
 }
 
-#scripts_list .edit {
-  position: absolute;
+button.noskin {
   cursor: pointer;
-  right: 10px;
   padding: 0;
-  margin: 0 3px;
   border: none;
   background: transparent;
+  vertical-align: top;
+}
+
+#scripts_list .edit {
+  position: absolute;
+  right: 10px;
+  margin: 0 3px;
 }
 
 #scripts_list .edit img {
   content: -o-skin("Menu Widgets");
+}
+
+#scripts_list .edittxt img {
+  content: -o-skin("Menu Edit");
 }
 
 .script_infobox {
@@ -277,6 +289,14 @@ ul#scripts_list > li:nth-child(even) {
   font-size: small;
 }
 
+#edit_msg {
+  color: #000;
+}
+
+#edit_msg a {
+  color: navy;
+}
+
 #install_dialog {
   height: 200px;
   width: 500px;
@@ -352,3 +372,8 @@ ul#scripts_list > li:nth-child(even) {
   text-align: center;
   font-size: smaller;
 }
+
+@media all and (min-width: 640px) {
+  #edit_msg a { display: none; }
+}
+
