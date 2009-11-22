@@ -24,7 +24,8 @@
           <button type="button" class="edit reset" data-keep-if="scripts[].hassettings"
             title="Edit script settings"><img></button>
           <span data-keep-if="scripts[].isdirectory">
-            <button type="button" class="folder reset"><img> {{scripts[].prettyname}}</button>
+            <button type="button" class="folder reset"><img>
+              <span class="name">{{scripts[].prettyname}}</span></button>
           </span>
           <span data-remove-if="scripts[].isdirectory">
             <button type="button" name="check" class="toggle reset"><img class="disabled"
@@ -49,7 +50,7 @@
       </li>
     </ul>
     <div id="footer">
-      UJS Manager v{{version}} by <a href="http://my.opera.com/d.i.z./">Rafał Chłodnicki</a>
+      UJS Manager v{{version}} by <a href="http://my.opera.com/d.i.z./" target="_blank">Rafał Chłodnicki</a>
     </div>
   </div>
   <div id="settings_dialog">

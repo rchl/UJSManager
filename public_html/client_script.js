@@ -162,18 +162,17 @@ var ScriptsList = new function()
   this.filter = function(text)
   {
     var show_all = (text.length < 2 ? true : false);
+    var regexp = new RegExp(text, "i");
 
-    text = text.toLowerCase();
-
-    $('#scripts_list span.name').each(function() {
-      if (this.textContent.toLowerCase().indexOf(text) == -1 && !show_all)
-        this.selectSingleNode('ancestor-or-self::li').style.display = 'none';
+    $('#scripts_list li').each(function() {
+      if (regexp.test($('span.name', this).text()) || show_all)
+        this.style.display = 'block';
       else
       {
-        this.selectSingleNode('ancestor-or-self::li').style.display = 'block';
-
+        this.style.display = 'none';
       }
     });
+
   }
 
   this.newScript = function()
@@ -380,20 +379,19 @@ var ScriptSettings = new function()
 
   this.saveEditedSetting = function(form)
   {
+    var _self = this;
     form.edit_field.disabled = true;
     form.edit_field.value =
       form.edit_field.value.replace(/[\r\n]+/g, '');
 
-    $.post('', { action: 'changesetting', filename: currently_editing, exactmatch: form.edit_field.related.exactmatch, name: form.edit_field.related.name, value: form.edit_field.value },
+    $.post('', { action: 'changesetting', filename: currently_editing, exactmatch: _self.related_element.exactmatch, name: _self.related_element.name, value: form.edit_field.value },
       function(data)
       {
         if (data)
         {
+          _self.related_element.exactmatch = data.exactmatch;
+          _self.related_element.value = _self.related_element.textContent = data.value;
           EditDialog.close();
-          form.edit_field.related.exactmatch = data.exactmatch;
-          form.edit_field.related.value =
-            form.edit_field.related.textContent =
-            data.value;
         }
         form.edit_field.disabled = false;
       }, 'json');
@@ -402,7 +400,8 @@ var ScriptSettings = new function()
 
 var EditDialog = new function()
 {
-  var _self;
+  var _self = this;
+  var edit_dialog;
   var filename_el;
   var new_script = true;
   var edit_form;
@@ -410,12 +409,26 @@ var EditDialog = new function()
   var edit_field;
   var save_callback;
   var close_callback;
+  this.related_element = null;
+
+  this.show = function()
+  {
+    edit_dialog.animate( { left: '0px' } );
+  }
+
+  this.hide = function(callback)
+  {
+    if (callback)
+      edit_dialog.animate( { left: '100%' } );
+    else
+      edit_dialog.animate( { left: '100%' }, 'normal', 'swing', callback);
+  }
 
   this.open = function(element, data, callback_obj)
   {
     if (!edit_form)
     {
-      _self = $('#edit_dialog');
+      edit_dialog = $('#edit_dialog');
       edit_form = $('#edit_form')[0];
       edit_field = edit_form.edit_field;
       edit_filename = edit_form.filename;
@@ -424,12 +437,14 @@ var EditDialog = new function()
     }
 
     edit_field.value = data;
+    edit_filename.value = '';
     save_callback = callback_obj.save;
     close_callback = callback_obj.close;
 
     // if element given, edit existing file/setting, otherwise create new file
     if (element)
     {
+      _self.related_element = element;
       edit_filename.value = element.name;
       filename_el.hide();
       edit_title.text(element.getAttribute('name'));
@@ -444,7 +459,7 @@ var EditDialog = new function()
     }
 
     // resize textarea to fit whole available height
-    edit_field.style.height = (_self.height() - ($('#edit_header').outerHeight()+edit_form.offsetHeight-edit_field.offsetHeight)) + 'px';
+    edit_field.style.height = (edit_dialog.height() - ($('#edit_header').outerHeight()+edit_form.offsetHeight-edit_field.offsetHeight)) + 'px';
 
     edit_field.form.onsubmit = function(e)
     {
@@ -453,30 +468,32 @@ var EditDialog = new function()
     };
 
     callback_obj.open();
-    _self.animate( { left: '0px' } );
+    EditDialog.show()
 
   }
 
   this.close = function()
   {
-    _self.animate( { left: '100%' }, 'normal', 'swing', function() {
+    EditDialog.hide(function() {
       edit_filename.value = '';
       edit_field.value = ''
       $('#edit_msg').empty();
       edit_title.empty();
     });
+
     if (close_callback)
       close_callback();
 
     close_callback = null;
     save_callback = null;
+    _self.related_element = null;
   }
 
   this.save = function()
   {
     if (save_callback)
     {
-      save_callback(edit_form);
+      save_callback.call(_self, edit_form);
     }
     else
     {

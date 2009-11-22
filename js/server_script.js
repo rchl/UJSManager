@@ -331,9 +331,9 @@ function getAllUserScripts(requested_dir, istopdir)
     var scr_installer = getUserScript( PUBLIC_DIR.resolve('/js/ujs_manager_installer.js') );
 
     if ( !ujs_installer
-        || scr_installer.header.version > ujs_installer.header.version
-        || ujs_installer.header.servicepath != service_path
-        || ujs_installer.header.uniqueid != getPref('unique_id') )
+        || getPropOfArrayItem('version', scr_installer.header) > getPropOfArrayItem('version', ujs_installer.header)
+        || getPropOfArrayItem('servicepath', ujs_installer.header) != service_path
+        || getPropOfArrayItem('uniqueid', ujs_installer.header) != getPref('unique_id') )
     {
       // add user js installer to list because it wasn't there when reading dir
       if ( !ujs_installer )
@@ -349,7 +349,7 @@ function getAllUserScripts(requested_dir, istopdir)
         /\{\{unique_id\}\}/g, unique_id);
       savePref('unique_id', unique_id);
 
-      writeFile('ujs_manager_installer.js', scr_installer.filecontent);
+      writeFile('ujs_manager_installer.js', scr_installer.filecontent, true);
     }
   }
 
@@ -499,7 +499,7 @@ function changeScriptSetting(filename, exactmatch, name, value)
 
   content = content.replace(exactmatch, newval);
 
-  if ( writeFile(filename, content) )
+  if ( writeFile(filename, content, true) )
   {
     return {
       filename  : filename,
@@ -552,9 +552,7 @@ function writeFile(path, content, can_overwrite)
 
 function createFile(path, content, overwrite)
 {
-  if ( overwrite || !(SHARED_DIR.resolve(path)).exists )
-    return writeFile(path, content);
-  return false;
+  return writeFile(path, content, overwrite);
 }
 
 function deleteFile(filename)

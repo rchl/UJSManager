@@ -8,6 +8,7 @@ body {
   font-size: 70%;
   font-family: Tahoma, sans-serif;
   background: -o-skin("Hotlist Panel Skin");
+  overflow-x: hidden;
 }
 
 a {
