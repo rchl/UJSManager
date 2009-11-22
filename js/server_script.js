@@ -32,10 +32,10 @@ function handleRequest( event )
     return;
   }
 
-  // ok, this is before isOwner check because we want user to be able to install script from
+  // this block is before isOwner check because we want user to be able to install script from
   // normal pages. We could redirect to admin page but that would cause frightening unite redirect
   // warning page. Instead, we redirect from script file to public service address and then to
-  // admin service address without causing warnings. An admin page is where all the magic happens
+  // admin service address without causing warnings. Admin page is where all the magic happens
   // and remote users can't connect to it anyway.
   if ( !event.connection.isOwner )
   {
@@ -86,10 +86,14 @@ function handleRequest( event )
       return;
     }
 
-    response.write(
-      'UJS Manager is made to be only accessible from Opera running this service.<br>' +
-      'If you are the owner of this service, go to <a href="http://admin.' + request.host + opera.io.webserver.currentServicePath + '">Admin section</a>.'
-    );
+    var tpldata = {
+      msg      : $('<p>UJS Manager is made to be only accessible from Opera running this service.</p>' +
+                   '<p>If you are the owner of this service, go to <a href="http://admin.' + request.host + opera.io.webserver.currentServicePath + '" onclick="location.replace(this.href);return false;">Admin section</a>.</p>' +
+                   '<p>If you want to download UJS Manager, go to <a href="http://unite.opera.com/application/401/">download page</a>.</p>')
+    };
+
+    var template = new Markuper( 'templates/remote.html', tpldata );
+    response.write( template.parse().html() );
     response.close();
     return;
   }
@@ -216,7 +220,11 @@ function handleXHRQuery(query)
     case 'readtxt':
       return readFile(q_filename)||{error: "Wasn't able to read file or file empty!"}
     case 'writetxt':
-      return writeFile(q_filename, query['data'][0], query['can_overwrite'])||{error: "Wasn't able to write file. Possibly file already exists!"}
+      var File = null;
+      if (File=writeFile(q_filename, query['data'][0], query['can_overwrite']))
+        return getUserScript(File);
+      else
+        return {error: "Wasn't able to write file. Possibly file already exists!"};
     case 'remindmelater':
       updater.remindMeLater();
       return true;
@@ -537,7 +545,7 @@ function writeFile(path, content, can_overwrite)
     var stream = SHARED_DIR.open(path, opera.io.filemode.WRITE);
     stream.write(content);
     stream.close();
-    return true;
+    return File;
   }
   return false;
 }

@@ -88,7 +88,7 @@ var ScriptsList = new function()
     if ( !(clicked.className == 'name' || clicked.nodeName == 'FORM') )
       return;
 
-    var item = this.selectSingleNode('descendant-or-self::div[@class="desc"]');
+    var item = $('div.desc', this).get(0);
 
     // roll up previously open element
     if (last_item && item != last_item)
@@ -178,7 +178,10 @@ var ScriptsList = new function()
 
   this.newScript = function()
   {
-    EditDialog.open(null, '', { open: ScriptsList.hide, close: ScriptsList.show });
+    EditDialog.open(null, '', {
+      open: ScriptsList.hide,
+      close: ScriptsList.show
+    });
   }
 
   this.editScriptText = function(ev)
@@ -437,7 +440,7 @@ var EditDialog = new function()
     {
       filename_el.show();
       edit_title.text('New script');
-      $('#edit_msg').html('<a href="#newscript=1" target="_blank">open in new tab</a>');
+      $('#edit_msg').html('You will have to reload UJS Manager page to see new file after saving (will be fixed).<br><a href="#newscript=1" target="_blank">open in new tab</a>');
     }
 
     // resize textarea to fit whole available height
@@ -480,7 +483,7 @@ var EditDialog = new function()
       // add js extension if missing when creating new scripts
       if (new_script)
       {
-        if (!/\.js$/i.test(edit_filename.value))
+        if (!(/\.js$/i.test(edit_filename.value)))
           edit_filename.value += '.js';
       }
 
@@ -496,7 +499,8 @@ var EditDialog = new function()
       )[0];
       ifr.onload = function()
       {
-        ifr.onload = function(){
+        ifr.onload = function()
+        {
           var resp = eval('('+ifr.contentDocument.body.textContent+')');
           if (!resp)
             alert('Saving failed due to unknown problem');
