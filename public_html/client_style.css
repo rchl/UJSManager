@@ -1,18 +1,18 @@
 html, body {
   height: 100%;
+  padding: 0;
+  margin: 0;
 }
 
 body {
   font-size: 70%;
   font-family: Tahoma, sans-serif;
   background: -o-skin("Dialog Skin");
-  padding: 0;
-  margin: 0;
 }
 
 a {
   text-decoration: none;
-  color: #000;
+  color: navy;
 }
 
 label {
@@ -27,13 +27,24 @@ ul {
 
 li {
   white-space: nowrap;
-  overflow: hidden;
+  overflow-x: hidden;
   -o-text-overflow: ellipsis;
 }
 
-form {
+form, button, p {
   margin: 0;
   padding: 0;
+}
+
+button.reset {
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  vertical-align: top;
+}
+
+button img {
+  vertical-align: text-bottom;
 }
 
 #notifier {
@@ -58,9 +69,33 @@ form {
   padding: 3px;
 }
 
+#main_container {
+  position: relative;
+}
+
+#create_script {
+  background: -o-skin("Selector Button Skin.pressed");
+  padding: .1em;
+  position: absolute;
+  white-space: nowrap;
+  right: 0;
+  margin: .2em 0;
+  font-size: 20px;
+  cursor: pointer;
+  opacity: .8;
+}
+
+#create_script:hover {
+  opacity: 1;
+}
+
+#create_script img {
+  vertical-align: top;
+  content: -o-skin("Add service");
+}
+
 #quickfind_container {
   padding: .5em .5em 0 .5em;
-  position: relative;
 }
 
 #quickfind {
@@ -76,45 +111,26 @@ form {
   padding: 1em;
   margin: .5em;
   background: -o-skin("Dialog Page Skin");
-  position: relative;
 }
 
 #scripts_list form {
   padding: 3px;
-  display: block;
   cursor: pointer;
+  position: relative;
+  overflow-x: hidden;
+  -o-text-overflow: ellipsis;
 }
 
 #scripts_list form:hover
 {
-  /*background: #ddd;*/
   color: #00a;
   background: -o-skin("Cycler Page Button Skin.hover");
-  /*outline: 1px solid #eee;*/
-}
-
-/*
-ul#scripts_list > li:nth-child(even) {
-  background: #eee;
-}
-*/
-
-#scripts_list form button {
-  padding: 0;
 }
 
 #scripts_list .desc {
   display: none;
   color: -o-skin("Panel Treeview Skin.disabled");
   padding-left: 2em;
-}
-
-#scripts_list .desc button img {
-  cursor: pointer;
-  border: none;
-  padding: 0;
-  background: transparent;
-  vertical-align: text-bottom;
 }
 
 #scripts_list .delete {
@@ -133,27 +149,13 @@ ul#scripts_list > li:nth-child(even) {
   content: -o-skin("Expand Disabled");
 }
 
-#scripts_list .folder {
-  border: none;
-  background: transparent;
-}
-
 #scripts_list .folder img {
   content: -o-skin("Folder");
 }
 
-button.noskin {
-  cursor: pointer;
-  padding: 0;
-  border: none;
-  background: transparent;
-  vertical-align: top;
-}
-
 #scripts_list .edit {
   position: absolute;
-  right: 10px;
-  margin: 0 3px;
+  right: 3px;
 }
 
 #scripts_list .edit img {
@@ -172,9 +174,7 @@ button.noskin {
 }
 
 .script_infobox p {
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
+  overflow-x: hidden;
   white-space: nowrap;
   -o-text-overflow: ellipsis;
 }
@@ -184,58 +184,48 @@ button.noskin {
   min-width: 5em;
 }
 
-.infoboxcontent {
-  display: none;
-  font-size: smaller;
-  white-space: -o-pre-wrap;
-  background: yellow;
-  border: 1px solid #000;
-  position: absolute;
-  left: 0;
-}
-
-#settings_container {
+#settings_dialog {
   position: fixed;
   opacity: .95;
   top: 0;
   left: 100%;
   bottom: 0;
   width: 100%;
+  height: 100%;
+  overflow: hidden;
   padding: .5em;
   box-sizing: border-box;
 }
 
-#settings_container > #settings_header {
+#settings_header, #edit_header {
   padding: 1em;
+  box-sizing: border-box;
   background: -o-skin("Tab Button Skin");
   white-space: nowrap;
   overflow: hidden;
   -o-text-overflow: ellipsis;
 }
 
-#settings_container > #settings_header > #close_settings {
-  display: inline-block;
-  background: -o-skin("Back");
-  width: -o-skin;
-  height: -o-skin;
-  cursor: pointer;
-  vertical-align: text-bottom;
-}
-
-/*
-#settings_container > #settings_header > #close_settings:hover {
-  background: -o-skin("Pagebar Close Button Skin.pressed");
-}
-*/
-
-#settings_container > #settings_header > #settings_title {
+#settings_title, #edit_title {
   font-size: 1.6em;
 }
 
-#settings_container > #settings {
+#close_settings img, #close_edit img {
+  content: -o-skin("Back");
+}
+
+#settings_container {
   padding: 1em;
-  white-space: nowrap;
+  box-sizing: border-box;
   background: -o-skin("Dialog Page Skin");
+}
+
+#settings {
+  white-space: nowrap;
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 100%;
+  -o-text-overflow: ellipsis;
 }
 
 #settings ul.indent1 { padding-left: 1em; }
@@ -255,8 +245,6 @@ button.noskin {
   background: -o-skin("Push Button Skin");
   margin-left: 2px;
   padding: 0 4px;
-  overflow: hidden;
-  -o-text-overflow: ellipsis;
 }
 
 #settings .setting_elem:hover {
@@ -264,37 +252,44 @@ button.noskin {
 }
 
 #edit_dialog {
-  background-color: rgba(0,0,0,.5);
-  color: #fff;
   position: fixed;
   left: 100%;
   top: 0;
   width: 100%;
   height: 100%;
+  padding: .5em;
+  box-sizing: border-box;
+}
+
+#edit_form {
   text-align: right;
 }
 
-#edit_dialog form {
-  background: -o-skin("Dialog Page Skin");
+#edit_form button[type="submit"] {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+#edit_form button[type="submit"] img {
+  content: -o-skin("Save");
+}
+
+#edit_form_content {
   padding: 1em;
-  margin: .5em;
+  background: -o-skin("Dialog Page Skin");
+  text-align: left;
+}
+
+#edit_filename {
+  margin-bottom: 1em;
 }
 
 #edit_dialog textarea {
   width: 100%;
-  height: 80%;
   padding: 0;
   margin-bottom: 5px;
   border: 1px solid #aaa;
   font-size: small;
-}
-
-#edit_msg {
-  color: #000;
-}
-
-#edit_msg a {
-  color: navy;
 }
 
 #install_dialog {

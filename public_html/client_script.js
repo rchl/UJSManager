@@ -1,266 +1,203 @@
-var currently_editing = null;
-
 $(document).ready(function() {
-  // add onchange handler to checkboxes
-  $('button[name="check"]').each(function() {
-    $(this).click(toggleScript);
+  // handler for enabling/disabling script
+  $('button[name="check"], button.toggle').click(ScriptsList.toggleScript);
+
+  // handler for toggling script info
+  $('form[name]').click(ScriptsList.toggleItem);
+
+  // handler for directory changing
+  $('button.folder').click(ScriptsList.changeDirectory);
+
+  // handler for edit setting buttons
+  $('button.edit').click(ScriptsList.loadSettings);
+
+  // handler for delete button
+  $('button.delete').click(ScriptsList.deleteScript);
+
+  // handler for "edit script text" button
+  $('button.edittxt').click(ScriptsList.editScriptText);
+
+  // handler for canceling edit dialog
+  $('#close_edit').click(EditDialog.close);
+
+  // handler for closing settings dialog
+  $('#close_settings').click(ScriptSettings.close);
+
+  // handler for hiding update notifier
+  $('#close_notifier').click(function() {
+    var _this = this;
+
+    $.post('', { action: 'remindmelater' },
+      function()
+      {
+        // hide notifier
+        $(_this).parent().slideUp('normal');
+      });
   });
 
-  // add click handler to expand script options
-  $('form[name]').each(function() {
-    $(this).click(toggleOptions);
-  });
-
-  // add handler to directory items
-  $('button.folder').each(function() {
-    $(this).click(changeDirectory);
-  });
-
-  // add click handler to edit icons
-  $('button.edit').each(function() {
-    $(this).click(getScriptSettings);
-  });
-
-  // add click handler to delete button
-  $('button.delete').each(function() {
-    $(this).click(deleteScript);
-  });
-
-  // add click handler to toggle button
-  $('button.toggle').each(function() {
-    $(this).click(toggleScript);
-  });
-
-  // add click handler to edit script text button
-  $('button.edittxt').each(function() {
-    $(this).click(editScriptText);
-  });
-
-  $('#close_notifier').click(remindMeLater);
-
-  // add handler for quick search
+  // handler for quick find
   $('#quickfind').bind('focus input', function(e) {
       if (e.type == 'focus')
       {
-        if (this.value == 'Quick find')
-          this.value = '';
+        if (this.value == 'Quick find') { this.value = ''; }
       }
       else
-      {
-        filterScripts(this.value);
-      }
+        ScriptsList.filter(this.value);
   });
 
+  $('#create_script').click(ScriptsList.newScript);
+
   // perform action if specified
-  var action;
-  if ((action = location.hash.match(/^#([^&]+)$/)))
+  var action = location.hash.match(/^#([^&]+)$/);
+  if (action)
   {
     action = RegExp.$1.split('=');
-    if (action[0] == 'edittxt')
-    {
-      editScriptText($('form[name="'+action[1]+'"]').get(0));
+    var key = action[0], val = action[1];
+  }
+  switch (key)
+  {
+    case 'edittxt':
+      ScriptsList.editScriptText($('form[name="'+val+'"]').get(0));
       location.hash = '';
-    }
+      break;
+    case 'newscript':
+      ScriptsList.newScript();
+      location.hash = '';
+      break;
   }
 
 });
 
-function remindMeLater()
+var ScriptsList = new function()
 {
-  var close_button = this;
+  var last_item = null;
 
-  $.post('', { action: 'remindmelater' },
-    function()
-    {
-      // hide notifier
-      $(close_button).parent().slideUp('normal');
-    });
-}
-
-function getScriptSettings(ev)
-{
-  var script_form = ev.target.form;
-
-  $.post('', { action: 'getsettings', filename: script_form.name },
-    function(data)
-    {
-      if (data)
-        return openScriptSettings(script_form.name, data);
-      alert("Can't find any settings for this script!");
-    }, 'json');
-}
-
-function openScriptSettings(filename, options)
-{
-  currently_editing = filename;
-
-  var optionsEl = document.createDocumentFragment();
-
-  $(options).each(function(i) {
-    optionsEl.appendChild( buildOption(this, i) );
-  });
-
-  $('#settings').empty();
-  $('#settings').append(optionsEl);
-
-  $('#settings_title').text(filename);
-  $('#scripts_list, #quickfind_container').animate( {left: '-100%'} );
-  $('#settings_container').animate( {left: '0px'} );
-}
-
-function closeScriptSettings()
-{
-  currently_editing = null;
-
-  $('#settings_container').animate( {left: '100%'} );
-  $('#scripts_list, #quickfind_container').animate( {left: '0'} );
-}
-
-function buildOption(op, index)
-{
-  var
-    cont = document.createElement('div'),
-    ul = document.createElement('ul'),
-    li = document.createElement('li'),
-    el;
-
-  switch (op.type)
-  {
-    case 'bool':
-      el = document.createElement('input');
-      el.type = 'checkbox';
-      el.id = 'el'+index;
-      el.checked = ( op.value=='true' ? true : false );
-      el.addEventListener('change', changeSetting, false);
-      // argh, hack for bool - append before text
-      li.appendChild(el);
-      ul.appendChild(li);
-      break;
-    case 'int':
-      el = document.createElement('button');
-      el.className = 'setting_elem';
-      el.type = 'number';
-      el.value = op.value;
-      el.textContent = op.value;
-      break;
-    case 'string':
-    case 'regexp':
-      el = document.createElement('span');
-      el.className = 'setting_elem';
-      el.onclick = function(){ openEditDialog(this, this.value, saveEditedSetting); }
-      el.type = 'text';
-      el.value = el.title = op.value;
-      el.textContent = op.value;
-      break;
+  this.hide = function() {
+    $('#main_container').animate( {left: '-100%'} );
   }
 
-  el.setAttribute('name', op.name);
-  el.exactmatch = op.exactmatch;
-
-  // use leading underscores as indent level
-  var indent_lev = op.name.match(/^_+/);
-  if ( indent_lev )
-  {
-    op.name = op.name.replace(/^_+/,'');
-    ul.className = 'indent'+indent_lev[0].length;
+  this.show = function() {
+    $('#main_container').animate( {left: '0'} );
   }
 
-  li = document.createElement('li');
-  var label = document.createElement('label');
-  label.textContent = op.name;
-  label.title = op.name;
-  label.setAttribute('for', 'el'+index);
-  li.appendChild(label);
-  ul.appendChild(li);
-
-  if ( ul.childNodes.length<2 )
+  this.toggleItem = function(ev)
   {
-    li.appendChild(el);
-    ul.appendChild(li);
+    var clicked = ev.target;
+
+    // only proceed when clicked on form or script name
+    if ( !(clicked.className == 'name' || clicked.nodeName == 'FORM') )
+      return;
+
+    var item = this.selectSingleNode('descendant-or-self::div[@class="desc"]');
+
+    // roll up previously open element
+    if (last_item && item != last_item)
+      $(last_item).slideUp('normal');
+
+    last_item = item;
+
+    // toggle clicked option
+    $(item).slideToggle('normal');
   }
 
-  return cont.appendChild(ul);
-}
+  this.toggleScript = function(ev)
+  {
+    var form = ev.target.form;
 
-function openEditDialog(element, data, save_callback)
-{
-  // don't know how to set property (not attribute) for element in jquery
-  var edit_field = $('#edit_field').get(0);
-  edit_field.value = data;
-  edit_field.related = element;
-  edit_field.form.onsubmit = function(e){ save_callback(e); return false; };
-  $('#edit_dialog').animate( { left: '0px' } );
-}
+    $('button.toggle img', form).attr( { class: 'disabled' } );
 
-function closeEditDialog()
-{
-  $('#edit_field').attr( { value: '' } );
-  $('#edit_msg').empty();
-  $('#edit_dialog').animate( { left: '100%' } );
-}
-
-function saveEditedSetting(ev)
-{
-  var form = ev.target;
-  form.edit_field.disabled = true;
-  form.edit_field.value =
-    form.edit_field.value.replace(/[\r\n]+/g, '');
-
-  $.post('', { action: 'changesetting', filename: currently_editing, exactmatch: form.edit_field.related.exactmatch, name: form.edit_field.related.name, value: form.edit_field.value },
-    function(data)
-    {
-      if (data)
+    $.post('', { action: 'toggle', filename: form.name, enable: form.check.checked },
+      function(data)
       {
-        closeEditDialog();
-        form.edit_field.related.exactmatch = data.exactmatch;
-        form.edit_field.related.value =
-          form.edit_field.related.textContent =
-          data.value;
-      }
-      form.edit_field.disabled = false;
-    }, 'json');
-}
+        if (!data.error)
+          form.name = data.result;
+        else
+          alert(data.error);
 
-function toggleOptions(ev)
-{
-  var
-    target = ev.target,
-    thiselem = this.selectSingleNode('descendant-or-self::div[@class="desc"]');
-
-  // only proceed when clicked on form or script name (UGLY HACK)
-  if ( !(target.className == 'name' || target.nodeName == 'FORM') )
-  {
-    return;
+        $('button.toggle img', form).attr( { class: ( data.enabled ? 'disabled' : '' ), disabled: false } );
+      }, 'json');
   }
 
-  // roll up all open options
-  $('div.desc').each(function() {
-    var _this = this;
-    // skip clicked element (we want to be able to close expanded options)
-    if (thiselem == _this) return;
-    $(_this).slideUp('normal');
-  });
-
-  // toggle clicked option
-  $(thiselem).slideToggle('normal');
-
-  ev.preventDefault();
-}
-
-function deleteScript(ev)
-{
-  var script_form = this.form;
-
-  if ( script_form.name && confirm('Do you really want to delete script:\n' +
-               decodeURIComponent(script_form.name) + '?') )
+  this.deleteScript = function(ev)
   {
-    $.post('', { action: 'delete', filename: script_form.name },
+    var form = this.form;
+
+    if ( form.name && confirm('Do you really want to delete script:\n' +
+                 decodeURIComponent(form.name) + '?') )
+    {
+      $.post('', { action: 'delete', filename: form.name },
+        function(data)
+        {
+          if (!data.error)
+          {
+            form.parentNode.parentNode.removeChild(
+              form.parentNode);
+          }
+          else
+          {
+            alert(data.error);
+          }
+        }, 'json');
+    }
+  }
+
+  this.loadSettings = function(ev)
+  {
+    var form = ev.target.form;
+
+    $.post('', { action: 'getsettings', filename: form.name },
+      function(data)
+      {
+        if (data)
+          return ScriptSettings.open(form.name, data);
+        alert("Can't find any settings for this script!");
+      }, 'json');
+  }
+
+  this.changeDirectory = function(ev)
+  {
+    location.href = location.pathname + '?dir=' + ev.target.form.name;
+  }
+
+  this.filter = function(text)
+  {
+    var show_all = (text.length < 2 ? true : false);
+
+    text = text.toLowerCase();
+
+    $('#scripts_list span.name').each(function() {
+      if (this.textContent.toLowerCase().indexOf(text) == -1 && !show_all)
+        this.selectSingleNode('ancestor-or-self::li').style.display = 'none';
+      else
+      {
+        this.selectSingleNode('ancestor-or-self::li').style.display = 'block';
+
+      }
+    });
+  }
+
+  this.newScript = function()
+  {
+    EditDialog.open(null, '', { open: ScriptsList.hide, close: ScriptsList.show });
+  }
+
+  this.editScriptText = function(ev)
+  {
+    if (!ev) return;
+
+    var form;
+    if (ev instanceof HTMLElement)
+      form = ev;
+    else
+      form = ev.target.form;
+
+    $.post('', { action: 'readtxt', filename: form.name },
       function(data)
       {
         if (!data.error)
         {
-          script_form.parentNode.parentNode.removeChild(
-            script_form.parentNode);
+          $('#edit_msg').html('Experimental! Please backup before saving.<br><a href="#edittxt='+form.name+'" target="_blank">open in new tab</a>');
+          EditDialog.open(form, data, { open: ScriptsList.hide, close: ScriptsList.show });
         }
         else
         {
@@ -268,147 +205,310 @@ function deleteScript(ev)
         }
       }, 'json');
   }
+
 }
 
-function toggleScript(ev)
+var ScriptSettings = new function()
 {
-  var script_form = ev.target.form;
+  var currently_editing = null;
+  var settings_el = null;
 
-  script_form.check.disabled = true;
-
-  $.post('', { action: 'toggle', filename: script_form.name, enable: script_form.check.checked },
-    function(data)
-    {
-      if (!data.error)
-      {
-        script_form.name = data.result;
-      }
-      else
-      {
-        // revert previous checkbox state
-        //script_form.check.checked = !script_form.check.checked;
-        alert(data.error);
-      }
-
-      $('button.toggle img', script_form).attr( 'class', ( data.enabled ? 'disabled' : '' ) );
-      $(script_form.check).attr ( {checked: data.enabled, disabled: false } );
-    }, 'json');
-}
-
-function editScriptText(ev)
-{
-  if (!ev) return;
-
-  var script_form;
-  if (ev instanceof HTMLElement)
-    script_form = ev;
-  else
-    script_form = ev.target.form;
-
-  $.post('', { action: 'readtxt', filename: script_form.name },
-    function(data)
-    {
-      if (!data.error)
-      {
-        $('#edit_msg').html( 'Experimental! Please backup before saving.<br><a href="#edittxt='+script_form.name+'" target="_blank">click to open in new window</a><br><br>' );
-        openEditDialog(script_form, data, saveScriptText);
-      }
-      else
-      {
-        alert(data.error);
-      }
-    }, 'json');
-}
-
-function saveScriptText(ev)
-{
-  var edit_field = ev.target.edit_field;
-
-  // have to post in hidden iframe as XHR can't handle multipart/form-data
-  var ifr = $('<iframe style="display:none" src="about:blank"></iframe>')[0];
-  var form = $(
-    '<form method="POST" action="' + location.protocol + '//' + location.hostname + location.pathname + '" enctype="multipart/form-data">'+
-      '<textarea name="data">' + edit_field.value + '</textarea>'+
-      '<input name="action" value="writetxt">'+
-      '<input name="filename" value="' + edit_field.related.name + '">'+
-    '</form>'
-  )[0];
-  ifr.onload = function()
+  this.init = function(op, index)
   {
-    ifr.onload = function(){ ifr.parentNode.removeChild(ifr); }
-    ifr.contentDocument.body.appendChild(form);
-    form.submit();
-    closeEditDialog();
-  }
-  document.documentElement.appendChild(ifr);
-}
+    var
+      cont = document.createElement('div'),
+      ul = document.createElement('ul'),
+      li = document.createElement('li'),
+      el;
 
-function changeDirectory(ev)
-{
-  location.href = location.pathname + '?dir=' + ev.target.form.name;
-}
-
-function changeSetting(ev)
-{
-  if ( !currently_editing )
-    return;
-
-  var val;
-
-  switch(ev.target.type)
-  {
-    case 'checkbox':
-      val = ev.target.checked;
-      break;
-    case 'text':
-    case 'number':
-      val = ev.target.value;
-      break;
-  }
-  if ( val === null ) return false;
-
-  ev.target.disabled = true;
-
-  $.post('', { action: 'changesetting', filename: currently_editing, exactmatch: ev.target.exactmatch, name: ev.target.name, value: val },
-    function(data)
+    switch (op.type)
     {
-      var inp = ev.target;
-
-      // if success - update input values
-      if ( data && inp.name == data.name )
-      {
-        inp.exactmatch = data.exactmatch;
-        switch(inp)
-        {
-          case 'checkbox':
-            inp.checked = ( data.value == true ? true : false );
-            break;
-          case 'text':
-          case 'number':
-            inp.value = data.value;
-            break;
+      case 'bool':
+        el = document.createElement('input');
+        el.type = 'checkbox';
+        el.id = 'el'+index;
+        el.checked = ( op.value=='true' ? true : false );
+        el.addEventListener('change', ScriptSettings.changeSetting, false);
+        // argh, hack for bool - append before text
+        li.appendChild(el);
+        ul.appendChild(li);
+        break;
+      case 'int':
+        el = document.createElement('button');
+        el.className = 'setting_elem';
+        el.type = 'number';
+        el.value = op.value;
+        el.textContent = op.value;
+        break;
+      case 'string':
+      case 'regexp':
+        el = document.createElement('span');
+        el.className = 'setting_elem';
+        el.onclick = function(){
+          EditDialog.open(
+            this,
+            this.value,
+            { open: function() { $('#settings_dialog').animate( {left: '-100%'} ); },
+              close: ScriptSettings.show,
+              save: ScriptSettings.saveEditedSetting }
+          );
         }
-      }
+        el.type = 'text';
+        el.value = el.title = op.value;
+        el.textContent = op.value;
+        break;
+    }
 
-      ev.target.disabled = false;
-    }, 'json');
+    el.setAttribute('name', op.name);
+    el.exactmatch = op.exactmatch;
+
+    // use leading underscores as indent level
+    var indent_lev = op.name.match(/^_+/);
+    if ( indent_lev )
+    {
+      op.name = op.name.replace(/^_+/,'');
+      ul.className = 'indent'+indent_lev[0].length;
+    }
+
+    li = document.createElement('li');
+    var label = document.createElement('label');
+    label.textContent = op.name;
+    label.title = op.name;
+    label.setAttribute('for', 'el'+index);
+    li.appendChild(label);
+    ul.appendChild(li);
+
+    if ( ul.childNodes.length<2 )
+    {
+      li.appendChild(el);
+      ul.appendChild(li);
+    }
+
+    return cont.appendChild(ul);
+  }
+
+  this.open = function(filename, options)
+  {
+    currently_editing = filename;
+
+    if (!settings_el)
+    {
+      settings_el = $('#settings');
+    }
+
+    var optionsEl = document.createDocumentFragment();
+
+    $(options).each(function(i) {
+      optionsEl.appendChild( ScriptSettings.init(this, i) );
+    });
+
+    settings_el.empty();
+    settings_el.append(optionsEl);
+    $('#settings_container').height( $('#settings_dialog').height() - $('#settings_header').outerHeight() );
+    $('#settings_title').text(filename);
+    $('#settings_title').attr('title', filename);
+    ScriptsList.hide();
+    ScriptSettings.show();
+  }
+
+  this.close = function()
+  {
+    currently_editing = null;
+
+    ScriptSettings.hide();
+    ScriptsList.show();
+  }
+
+  this.show = function()
+  {
+    $('#settings_dialog').animate( {left: '0px'} );
+  }
+
+  this.hide = function()
+  {
+    $('#settings_dialog').animate( {left: '100%'} );
+  }
+
+  this.changeSetting = function(ev)
+  {
+    if ( !currently_editing )
+      return;
+
+    var val;
+
+    switch(ev.target.type)
+    {
+      case 'checkbox':
+        val = ev.target.checked;
+        break;
+      case 'text':
+      case 'number':
+        val = ev.target.value;
+        break;
+    }
+    if ( val === null ) return false;
+
+    ev.target.disabled = true;
+
+    $.post('', { action: 'changesetting', filename: currently_editing, exactmatch: ev.target.exactmatch, name: ev.target.name, value: val },
+      function(data)
+      {
+        var inp = ev.target;
+
+        // if success - update input values
+        if ( data && inp.name == data.name )
+        {
+          inp.exactmatch = data.exactmatch;
+          switch(inp)
+          {
+            case 'checkbox':
+              inp.checked = ( data.value == true ? true : false );
+              break;
+            case 'text':
+            case 'number':
+              inp.value = data.value;
+              break;
+          }
+        }
+
+        ev.target.disabled = false;
+      }, 'json');
+  }
+
+  this.saveEditedSetting = function(form)
+  {
+    form.edit_field.disabled = true;
+    form.edit_field.value =
+      form.edit_field.value.replace(/[\r\n]+/g, '');
+
+    $.post('', { action: 'changesetting', filename: currently_editing, exactmatch: form.edit_field.related.exactmatch, name: form.edit_field.related.name, value: form.edit_field.value },
+      function(data)
+      {
+        if (data)
+        {
+          EditDialog.close();
+          form.edit_field.related.exactmatch = data.exactmatch;
+          form.edit_field.related.value =
+            form.edit_field.related.textContent =
+            data.value;
+        }
+        form.edit_field.disabled = false;
+      }, 'json');
+  }
 }
 
-function filterScripts(text)
+var EditDialog = new function()
 {
-  var show_all = false;
+  var _self;
+  var filename_el;
+  var new_script = true;
+  var edit_form;
+  var edit_filename;
+  var edit_field;
+  var save_callback;
+  var close_callback;
 
-  if (text.length < 2) show_all = true;
-
-  text = text.toLowerCase();
-
-  $('#scripts_list span.name').each(function() {
-    if (this.textContent.toLowerCase().indexOf(text) == -1 && !show_all)
-      this.selectSingleNode('ancestor-or-self::li').style.display = 'none';
-    else
+  this.open = function(element, data, callback_obj)
+  {
+    if (!edit_form)
     {
-      this.selectSingleNode('ancestor-or-self::li').style.display = 'block';
+      _self = $('#edit_dialog');
+      edit_form = $('#edit_form')[0];
+      edit_field = edit_form.edit_field;
+      edit_filename = edit_form.filename;
+      edit_title = $('#edit_title').empty();
+      filename_el = $('#edit_filename');
+    }
+
+    edit_field.value = data;
+    save_callback = callback_obj.save;
+    close_callback = callback_obj.close;
+
+    // if element given, edit existing file/setting, otherwise create new file
+    if (element)
+    {
+      edit_filename.value = element.name;
+      filename_el.hide();
+      edit_title.text(element.getAttribute('name'));
+      new_script = false;
 
     }
-  });
+    else
+    {
+      filename_el.show();
+      edit_title.text('New script');
+      $('#edit_msg').html('<a href="#newscript=1" target="_blank">open in new tab</a>');
+    }
+
+    // resize textarea to fit whole available height
+    edit_field.style.height = (_self.height() - ($('#edit_header').outerHeight()+edit_form.offsetHeight-edit_field.offsetHeight)) + 'px';
+
+    edit_field.form.onsubmit = function(e)
+    {
+      EditDialog.save();
+      return false;
+    };
+
+    callback_obj.open();
+    _self.animate( { left: '0px' } );
+
+  }
+
+  this.close = function()
+  {
+    _self.animate( { left: '100%' }, 'normal', 'swing', function() {
+      edit_filename.value = '';
+      edit_field.value = ''
+      $('#edit_msg').empty();
+      edit_title.empty();
+    });
+    if (close_callback)
+      close_callback();
+
+    close_callback = null;
+    save_callback = null;
+  }
+
+  this.save = function()
+  {
+    if (save_callback)
+    {
+      save_callback(edit_form);
+    }
+    else
+    {
+      // add js extension if missing when creating new scripts
+      if (new_script)
+      {
+        if (!/\.js$/i.test(edit_filename.value))
+          edit_filename.value += '.js';
+      }
+
+      // have to post in hidden iframe as XHR can't handle multipart/form-data
+      var ifr = $('<iframe style="display:none" src="about:blank"></iframe>')[0];
+      var form = $(
+        '<form method="POST" action="' + location.protocol + '//' + location.hostname + location.pathname + '" enctype="multipart/form-data">'+
+          '<textarea name="data">' + edit_field.value + '</textarea>'+
+          '<input name="action" value="writetxt">'+
+          '<input name="filename" value="' + edit_filename.value + '">'+
+          (new_script?'':'<input type="hidden" name="can_overwrite" value="true">')+
+        '</form>'
+      )[0];
+      ifr.onload = function()
+      {
+        ifr.onload = function(){
+          var resp = eval('('+ifr.contentDocument.body.textContent+')');
+          if (!resp)
+            alert('Saving failed due to unknown problem');
+          else if (resp.error)
+            alert(resp.error);
+          ifr.parentNode.removeChild(ifr);
+          EditDialog.close();
+        }
+        ifr.contentDocument.body.appendChild(form);
+        form.submit();
+      }
+      document.documentElement.appendChild(ifr);
+    }
+  }
 }

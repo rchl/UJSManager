@@ -97,7 +97,7 @@ function handleRequest( event )
   if ( request.bodyItems['install_script'] )
   {
     var
-      script_uri = decodeURIComponent(request.bodyItems.install_script[0]),
+      script_uri = unescape(request.bodyItems.install_script[0]),
       script_body = request.bodyItems.script_body[0],
       overwrite = ( request.bodyItems.overwrite ? true : false ),
       filename = script_uri.match(/.+\/([^/?]+)/);
@@ -195,7 +195,7 @@ function handleXHRQuery(query)
         }
 
         return {
-          result: decodeURIComponent(File.name),
+          result: unescape(File.name),
           enabled: enabled
         };
       }
@@ -216,7 +216,7 @@ function handleXHRQuery(query)
     case 'readtxt':
       return readFile(q_filename)||{error: "Wasn't able to read file or file empty!"}
     case 'writetxt':
-      return writeFile(q_filename, query['data'][0])||{error: "Wasn't able to write file or file does not exist!"}
+      return writeFile(q_filename, query['data'][0], query['can_overwrite'])||{error: "Wasn't able to write file. Possibly file already exists!"}
     case 'remindmelater':
       updater.remindMeLater();
       return true;
@@ -297,7 +297,7 @@ function getAllUserScripts(requested_dir, istopdir)
     {
       scripts.push
       ({
-        prettyname  : decodeURIComponent(file.name),
+        prettyname  : unescape(file.name),
         filename    : file.path.replace('mountpoint:/', ''),
         isdirectory : true
       });
@@ -368,7 +368,7 @@ function getAllUserScripts(requested_dir, istopdir)
 function getUserScript(File)
 {
   var obj = {
-      prettyname  : decodeURIComponent(File.name.replace(/\.xx$/i, '')),
+      prettyname  : unescape(File.name.replace(/\.xx$/i, '')),
       filename    : File.name,
       isenabled   : ( ( /\.js$/i.test(File.name) ) ? true : false ),
       isdirectory : false,
@@ -525,12 +525,15 @@ function readFile(f)
   return null;
 }
 
-function writeFile(path, content)
+function writeFile(path, content, can_overwrite)
 {
   var File = null;
 
   if ( path && content && (File=SHARED_DIR.resolve(path)) )
   {
+    if (File.exists && !can_overwrite)
+      return false;
+
     var stream = SHARED_DIR.open(path, opera.io.filemode.WRITE);
     stream.write(content);
     stream.close();
