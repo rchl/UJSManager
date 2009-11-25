@@ -10,7 +10,7 @@ var
   PUBLIC_DIR = opera.io.filesystem.mountSystemDirectory('application'),
   SERVICE_DOAP = 'http://unite.opera.com/service/doap/401/',
   /* DON'T FORGET TO UPDATE FOR EVERY RELEASE !!! */
-  SERVICE_VERSION = '2.0',
+  SERVICE_VERSION = '2.1',
   service_path = 'http://' + opera.io.webserver.hostName + opera.io.webserver.currentServicePath,
   static_files = [],
   data = { scripts: getAllUserScripts(null, true) };
@@ -127,6 +127,7 @@ function handleRequest( event )
   if ( request.bodyItems['action'] )
   {
     var resp = handleXHRQuery(request.bodyItems);
+    response.setResponseHeader('Content-type', 'text/plain');
     response.write(JSON.stringify(resp));
     response.close();
     return;
@@ -222,7 +223,19 @@ function handleXHRQuery(query)
     case 'writetxt':
       var File = null;
       if (File=writeFile(q_filename, query['data'][0], query['can_overwrite']))
-        return getUserScript(File);
+      {
+        if (query['can_overwrite'])
+        {
+          return getUserScript(File);
+        }
+        else
+        {
+          var arr = [];
+          arr.push(getUserScript(File));
+          var template = new Markuper( 'templates/tpl.html', { scripts: arr } );
+          return { new_script: template.parse().select('li')[0].outerHTML };
+        }
+      }
       else
         return {error: "Wasn't able to write file. Possibly file already exists!"};
     case 'remindmelater':

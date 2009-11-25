@@ -84,6 +84,7 @@ button img {
   font-size: 20px;
   cursor: pointer;
   opacity: .8;
+  color: #555;
 }
 
 #create_script:hover {
@@ -96,7 +97,7 @@ button img {
 }
 
 #quickfind_container {
-  padding: .5em .5em 0 .5em;
+  padding: .5em 7em 0 .5em;
 }
 
 #quickfind {
@@ -148,6 +149,11 @@ button img {
 
 #scripts_list .toggle img {
   content: -o-skin("Expand Disabled");
+}
+
+#scripts_list .folder {
+  width: 100%;
+  text-align: left;
 }
 
 #scripts_list .folder img {
@@ -299,6 +305,14 @@ button img {
   margin: 0 auto;
 }
 
+#install_dialog p {
+  margin: 1em 0;
+}
+
+#install_dialog button {
+  padding: 1px 8px;
+}
+
 #install_dialog h1 {
   font-size: 48px;
   color: -o-skin("Dialog Skin");
@@ -329,10 +343,6 @@ button img {
 
 #install_dialog form p {
   font-size: 16px;
-}
-
-#install_dialog form code {
-  background: #FFA1A1;
 }
 
 #install_dialog table {

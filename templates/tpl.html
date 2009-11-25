@@ -14,7 +14,7 @@
     <span id="msg"><a href="http://unite.opera.com/application/401/"
     target="_blank">UJS Manager update available!</a></span></div>
   <div id="main_container">
-    <button id="create_script" class="reset" title="Create new script file"><img></button>
+    <button id="create_script" class="reset" title="Create new script file"><img>New</button>
     <div id="quickfind_container">
       <input type="text" id="quickfind" value="Quick find">
     </div>
@@ -22,15 +22,15 @@
       <li data-list="scripts">
         <form name="{{scripts[].filename}}">
           <button type="button" class="edit reset" data-keep-if="scripts[].hassettings"
-            title="Edit script settings"><img></button>
-          <span data-keep-if="scripts[].isdirectory">
-            <button type="button" class="folder reset"><img>
+            title="Edit script settings" handler="loadSettings"><img></button>
+          <div data-keep-if="scripts[].isdirectory">
+            <button type="button" class="folder reset" handler="changeDirectory"><img>
               <span class="name">{{scripts[].prettyname}}</span></button>
-          </span>
-          <span data-remove-if="scripts[].isdirectory">
-            <button type="button" name="check" class="toggle reset"><img class="disabled"
+          </div>
+          <div data-remove-if="scripts[].isdirectory" handler="toggleItem">
+            <button type="button" name="check" class="toggle reset" handler="toggleScript"><img class="disabled"
               data-keep-if="scripts[].isenabled"><img data-remove-if="scripts[].isenabled"></button>
-            <span class="name" title="{{scripts[].prettyname}}">{{scripts[].prettyname}}</span>
+            <span class="name" title="{{scripts[].prettyname}}" handler="toggleItem">{{scripts[].prettyname}}</span>
             <div class="desc">
               <div class="script_infobox" data-keep-if="scripts[].header">
                 <p data-list="scripts[].header">
@@ -39,13 +39,13 @@
                 </p>
               </div>
               <div>
-                <button type="button" class="delete" title="Delete"><img></button>
-                <button type="button" class="toggle"><img class="disabled"
+                <button type="button" class="delete" title="Delete" handler="deleteScript"><img></button>
+                <button type="button" class="toggle" handler="toggleScript"><img class="disabled"
                   data-keep-if="scripts[].isenabled"><img data-remove-if="scripts[].isenabled">Toggle</button>
-                <button type="button" class="edittxt"><img>Edit</button>
+                <button type="button" class="edittxt" handler="editScriptText"><img>Edit</button>
               </div>
             </div>
-          </span>
+          </div>
         </form>
       </li>
     </ul>

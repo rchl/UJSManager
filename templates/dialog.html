@@ -10,19 +10,13 @@
   <div id="install_dialog">
     <h1><img src="favicon.48x48.png"> UJS Manager <span>user script installation</span></h1>
     <form action="{{admin_url}}" method="post" enctype="multipart/form-data">
-      <p>Are you sure you want to install user script from this location?</p>
+      <p>Are you sure you want to install user script from this location?<br>
+      You should only install it if you trust that it's secure!</p>
       <code>{{install_url}}</code>
-      <p>You should only install it if you trust that it's secure!</p>
       <input type="hidden" name="install_script" value="{{install_url}}">
       <textarea name="script_body">{{script_body}}</textarea>
       <p class="warning" data-keep-if="ask_overwrite">Script with that name already
-        exists in your user scripts directory. It will be overwritten if you proceed.
-      </p>
-      <p>
-        <input type="hidden" name="overwrite" value="1" data-keep-if="ask_overwrite">
-        <button type="submit" data-keep-if="ask_overwrite">Update script</button>
-        <button type="submit" data-remove-if="ask_overwrite">Install script</button>
-        <button type="button" onclick="javascript:history.back()">Go back</button>
+        exists in your user scripts directory.<br>It will be overwritten if you proceed.
       </p>
       <table data-keep-if="ask_overwrite">
         <tr>
@@ -43,6 +37,12 @@
             </div>
           </td>
       </table>
+      <p>
+        <input type="hidden" name="overwrite" value="1" data-keep-if="ask_overwrite">
+        <button type="submit" data-keep-if="ask_overwrite">Update script</button>
+        <button type="submit" data-remove-if="ask_overwrite">Install script</button>
+        <button type="button" onclick="javascript:history.back()">Go back</button>
+      </p>
     </form>
   </div>
 </body>

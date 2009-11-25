@@ -1,22 +1,40 @@
+// this way it's much easier to handle new elements added
+// to document dynamically from html code
+document.addEventListener('click', function(e)
+{
+  var
+    _this = e.target,
+    handler = _this.getAttribute('handler');
+
+  switch (handler)
+  {
+    case 'changeDirectory':
+      ScriptsList.changeDirectory.call(_this, e);
+      break;
+    case 'toggleItem':
+      ScriptsList.toggleItem.call(_this, e);
+      break;
+    case 'loadSettings':
+      ScriptsList.loadSettings.call(_this, e);
+      break;
+    case 'toggleScript':
+      ScriptsList.toggleScript.call(_this, e);
+      break;
+    case 'editScriptText':
+      ScriptsList.editScriptText.call(_this, e);
+      break;
+    case 'deleteScript':
+      ScriptsList.deleteScript.call(_this, e);
+      break;
+    default:
+      return true;
+  }
+  e.preventDefault();
+  return false;
+}
+, false);
+
 $(document).ready(function() {
-  // handler for enabling/disabling script
-  $('button[name="check"], button.toggle').click(ScriptsList.toggleScript);
-
-  // handler for toggling script info
-  $('form[name]').click(ScriptsList.toggleItem);
-
-  // handler for directory changing
-  $('button.folder').click(ScriptsList.changeDirectory);
-
-  // handler for edit setting buttons
-  $('button.edit').click(ScriptsList.loadSettings);
-
-  // handler for delete button
-  $('button.delete').click(ScriptsList.deleteScript);
-
-  // handler for "edit script text" button
-  $('button.edittxt').click(ScriptsList.editScriptText);
-
   // handler for canceling edit dialog
   $('#close_edit').click(EditDialog.close);
 
@@ -84,11 +102,7 @@ var ScriptsList = new function()
   {
     var clicked = ev.target;
 
-    // only proceed when clicked on form or script name
-    if ( !(clicked.className == 'name' || clicked.nodeName == 'FORM') )
-      return;
-
-    var item = $('div.desc', this).get(0);
+    var item = $('div.desc', this.parentNode).get(0);
 
     // roll up previously open element
     if (last_item && item != last_item)
@@ -123,15 +137,14 @@ var ScriptsList = new function()
     var form = this.form;
 
     if ( form.name && confirm('Do you really want to delete script:\n' +
-                 decodeURIComponent(form.name) + '?') )
+                 unescape(form.name) + '?') )
     {
       $.post('', { action: 'delete', filename: form.name },
         function(data)
         {
           if (!data.error)
           {
-            form.parentNode.parentNode.removeChild(
-              form.parentNode);
+            $(form).parents('li').hide('normal', function(){ $(this).remove(); })
           }
           else
           {
@@ -308,7 +321,7 @@ var ScriptSettings = new function()
     settings_el.append(optionsEl);
     $('#settings_container').height( $('#settings_dialog').height() - $('#settings_header').outerHeight() );
     $('#settings_title').text(filename);
-    $('#settings_title').attr('title', filename);
+    $('#settings_title').attr('title', unescape(filename));
     ScriptsList.hide();
     ScriptSettings.show();
   }
@@ -447,7 +460,7 @@ var EditDialog = new function()
       _self.related_element = element;
       edit_filename.value = element.name;
       filename_el.hide();
-      edit_title.text(element.getAttribute('name'));
+      edit_title.text(unescape(element.getAttribute('name')));
       new_script = false;
 
     }
@@ -455,7 +468,7 @@ var EditDialog = new function()
     {
       filename_el.show();
       edit_title.text('New script');
-      $('#edit_msg').html('You will have to reload UJS Manager page to see new file after saving (will be fixed).<br><a href="#newscript=1" target="_blank">open in new tab</a>');
+      $('#edit_msg').html('<a href="#newscript=1" target="_blank">open in new tab</a>');
     }
 
     // resize textarea to fit whole available height
@@ -518,11 +531,20 @@ var EditDialog = new function()
       {
         ifr.onload = function()
         {
-          var resp = eval('('+ifr.contentDocument.body.textContent+')');
+          var resp = eval('('+ifr.contentDocument.documentElement.text+')');
           if (!resp)
             alert('Saving failed due to unknown problem');
           else if (resp.error)
             alert(resp.error);
+          else if (resp.new_script)
+          {
+            var s = $(resp.new_script);
+            s[0].style.opacity = 0;
+            $('#scripts_list').append(s);
+            s[0].scrollIntoView();
+            s.fadeTo(2000, 1);
+          }
+
           ifr.parentNode.removeChild(ifr);
           EditDialog.close();
         }

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        UJS Manager - script installer
 // @include     *.js*
-// @version     0.4
+// @version     0.5
 // @servicepath {{service_path}}
 // @uniqueid    {{unique_id}}
 // ==/UserScript==
@@ -11,8 +11,7 @@ window.addEventListener(
   function()
   {
     // try to detect user scripts by pre tag alone
-    if ( !(document && document.body && document.body.childElementCount == 1
-        && document.body.firstChild.tagName.toLowerCase() == 'pre'
+    if ( !(document && document.querySelector('body > pre:only-child')
         && location.href.match(/\.js($|\?)/))  // matches .js files (also with query)
       )
       return;
@@ -55,7 +54,7 @@ window.addEventListener(
     var install_but = document.createElement('button');
       install_but.textContent = 'Install User Script';
       install_but.setAttribute('style', 'float:right;');
-      install_but.onclick = function(){ install_script(location.href); }
+      install_but.onclick = function(){ install_script(); }
 
     var close_but = document.createElement('button');
       //close_but.textContent = 'X';
@@ -79,7 +78,7 @@ window.addEventListener(
 
     badge.show()
 
-    function install_script(uri)
+    function install_script()
     {
       var unique_id = '{{unique_id}}';
       var service_uri = '{{service_path}}';
@@ -90,7 +89,7 @@ window.addEventListener(
       form.enctype = 'multipart/form-data';
       form.innerHTML = '<textarea name="script_body">' +
                        document.getElementsByTagName('pre')[0].textContent + '</textarea>' +
-                       '<input type="text" name="install_script" value="' + uri + '">' +
+                       '<input type="text" name="install_script" value="' + location.href + '">' +
                        '<input type="text" name="unique_id" value="' + unique_id +'">';
       form.submit();
     }
