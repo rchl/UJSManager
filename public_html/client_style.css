@@ -144,11 +144,11 @@ button img {
 }
 
 #scripts_list .toggle img.disabled {
-  content: -o-skin("Expand Enabled");
+  content: url(icon-enabled.png);
 }
 
 #scripts_list .toggle img {
-  content: -o-skin("Expand Disabled");
+  content: url(icon-disabled.png);
 }
 
 #scripts_list .folder {

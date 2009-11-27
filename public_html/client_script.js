@@ -462,13 +462,13 @@ var EditDialog = new function()
       filename_el.hide();
       edit_title.text(unescape(element.getAttribute('name')));
       new_script = false;
-
     }
     else
     {
       filename_el.show();
       edit_title.text('New script');
       $('#edit_msg').html('<a href="#newscript=1" target="_blank">open in new tab</a>');
+      new_script = true;
     }
 
     // resize textarea to fit whole available height
@@ -520,13 +520,15 @@ var EditDialog = new function()
       // have to post in hidden iframe as XHR can't handle multipart/form-data
       var ifr = $('<iframe style="display:none" src="about:blank"></iframe>')[0];
       var form = $(
-        '<form method="POST" action="' + location.protocol + '//' + location.hostname + location.pathname + '" enctype="multipart/form-data">'+
-          '<textarea name="data">' + edit_field.value + '</textarea>'+
+        '<form method="POST" action="' + location.protocol + '//' + location.host + location.pathname + '" enctype="multipart/form-data">'+
+          '<textarea name="data"></textarea>'+
           '<input name="action" value="writetxt">'+
-          '<input name="filename" value="' + edit_filename.value + '">'+
+          '<input name="filename">'+
           (new_script?'':'<input type="hidden" name="can_overwrite" value="true">')+
         '</form>'
       )[0];
+      form.data.value = edit_field.value;
+      form.filename.value = edit_filename.value;
       ifr.onload = function()
       {
         ifr.onload = function()

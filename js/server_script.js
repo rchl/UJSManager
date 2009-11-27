@@ -25,6 +25,7 @@ function handleRequest( event )
 {
   var response = event.connection.response;
   var request = event.connection.request;
+  var forceOwner = (request.ip == '127.0.0.1');
 
   if ( isPublicFile(request.uri) )
   {
@@ -37,55 +38,57 @@ function handleRequest( event )
   // warning page. Instead, we redirect from script file to public service address and then to
   // admin service address without causing warnings. Admin page is where all the magic happens
   // and remote users can't connect to it anyway.
-  if ( !event.connection.isOwner )
+  if ( request.bodyItems['install_script'] )
   {
-    if ( request.bodyItems['install_script'] )
+    if ( !request.bodyItems['unique_id']
+         || request.bodyItems['unique_id'][0] != getPref('unique_id') )
     {
-      if ( !request.bodyItems['unique_id']
-           || request.bodyItems['unique_id'][0] != getPref('unique_id') )
-      {
-        response.write( "This won't work. Bad unique id." );
-        response.close();
-        return;
-      }
-
-      var tpldata = {
-        admin_url     : 'http://admin.' + request.host + opera.io.webserver.currentServicePath,
-        install_url   : request.bodyItems['install_script'][0],
-        script_body   : request.bodyItems['script_body'][0],
-        ask_overwrite : false,
-        old_header    : null,
-        new_header    : null
-      };
-
-      // extract file name from path
-      var filename = tpldata.install_url.match(/.+\/([^/?]+)/);
-      if ( filename )
-      {
-        filename = filename[1];
-        // check if file already exists and ask for overwrite if yes
-        var existing_body = readFile(filename);
-        if ( existing_body !== null )
-        {
-          tpldata.ask_overwrite = true;
-          tpldata.old_header = getUserScriptHeader(existing_body)||{'<missing>':''};
-          tpldata.new_header = getUserScriptHeader(tpldata.script_body)||{'<missing>':''};
-
-        }
-      }
-      else
-      {
-        response.write( "Error. UJS Manager couldn't extract filename from path." );
-        response.close();
-        return;
-      }
-
-      var template = new Markuper( 'templates/dialog.html', tpldata );
-      response.write( template.parse().html() );
+      response.write( "This won't work. Bad unique id." );
       response.close();
       return;
     }
 
+    var tpldata = {
+      admin_url     : 'http://' + (forceOwner?'':'admin.') + request.host + opera.io.webserver.currentServicePath,
+      install_url   : request.bodyItems['install_script'][0],
+      script_body   : request.bodyItems['script_body'][0],
+      ask_overwrite : false,
+      old_header    : null,
+      new_header    : null
+    };
+
+    // extract file name from path
+    var filename = tpldata.install_url.match(/.+\/([^/?]+)/);
+    if ( filename )
+    {
+      filename = filename[1];
+      // check if file already exists and ask for overwrite if yes
+      var existing_body = readFile(filename);
+      if ( existing_body !== null )
+      {
+        tpldata.ask_overwrite = true;
+        tpldata.old_header = getUserScriptHeader(existing_body)||{'<missing>':''};
+        tpldata.new_header = getUserScriptHeader(tpldata.script_body)||{'<missing>':''};
+
+      }
+    }
+    else
+    {
+      response.write( "Error. UJS Manager couldn't extract filename from path." );
+      response.close();
+      return;
+    }
+
+    var template = new Markuper( 'templates/dialog.html', tpldata );
+    response.write( template.parse().html() );
+    response.close();
+    return;
+  }
+
+  // not owners not allowed unless they request local
+  // address which means they are owners (just running without unite account)
+  if ( !event.connection.isOwner && !forceOwner )
+  {
     var tpldata = {
       msg      : $('<p>UJS Manager is made to be only accessible from Opera running this service.</p>' +
                    '<p>If you are the owner of this service, go to <a href="http://admin.' + request.host + opera.io.webserver.currentServicePath + '" onclick="location.replace(this.href);return false;">Admin section</a>.</p>' +

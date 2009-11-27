@@ -20,16 +20,16 @@
     </div>
     <ul id="scripts_list">
       <li data-list="scripts">
-        <form name="{{scripts[].filename}}">
+        <form name="{{scripts[].filename}}" handler="toggleItem">
           <button type="button" class="edit reset" data-keep-if="scripts[].hassettings"
-            title="Edit script settings" handler="loadSettings"><img></button>
+            title="Edit script settings" handler="loadSettings"><img alt="Settings"></button>
           <div data-keep-if="scripts[].isdirectory">
-            <button type="button" class="folder reset" handler="changeDirectory"><img>
+            <button type="button" class="folder reset" handler="changeDirectory"><img alt="Dir">
               <span class="name">{{scripts[].prettyname}}</span></button>
           </div>
           <div data-remove-if="scripts[].isdirectory" handler="toggleItem">
             <button type="button" name="check" class="toggle reset" handler="toggleScript"><img class="disabled"
-              data-keep-if="scripts[].isenabled"><img data-remove-if="scripts[].isenabled"></button>
+              data-keep-if="scripts[].isenabled" alt="on"><img data-remove-if="scripts[].isenabled" alt="off"></button>
             <span class="name" title="{{scripts[].prettyname}}" handler="toggleItem">{{scripts[].prettyname}}</span>
             <div class="desc">
               <div class="script_infobox" data-keep-if="scripts[].header">
@@ -39,7 +39,7 @@
                 </p>
               </div>
               <div>
-                <button type="button" class="delete" title="Delete" handler="deleteScript"><img></button>
+                <button type="button" class="delete" title="Delete" handler="deleteScript"><img alt="delete"></button>
                 <button type="button" class="toggle" handler="toggleScript"><img class="disabled"
                   data-keep-if="scripts[].isenabled"><img data-remove-if="scripts[].isenabled">Toggle</button>
                 <button type="button" class="edittxt" handler="editScriptText"><img>Edit</button>
@@ -55,7 +55,7 @@
   </div>
   <div id="settings_dialog">
     <div id="settings_header">
-      <button id="close_settings" class="reset" title="Close script settings"><img></button>
+      <button id="close_settings" class="reset" title="Close script settings"><img alt="Close"></button>
       <span id="settings_title">[script_title]</span>
     </div>
     <div id="settings_container">
@@ -64,7 +64,7 @@
   </div>
   <div id="edit_dialog">
     <div id="edit_header">
-      <button id="close_edit" class="reset" title="Close edit dialog"><img></button>
+      <button id="close_edit" class="reset" title="Close edit dialog"><img alt="Close"></button>
       <span id="edit_title">[script_title]</span>
     </div>
     <form id="edit_form">
