@@ -1,3 +1,10 @@
+/*
+ *
+ * UJS Manager Unite Application
+ * Rafal Chlodnicki, 2009
+ *
+ */
+
 // this way it's much easier to handle new elements added
 // to document dynamically from html code
 document.addEventListener('click', function(e)

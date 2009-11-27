@@ -13,6 +13,8 @@
       <p>Are you sure you want to install user script from this location?<br>
       You should only install it if you trust that it's secure!</p>
       <code>{{install_url}}</code>
+      <input type="hidden" name="confirm" value="1">
+      <input type="hidden" name="unique_id" value="{{unique_id}}">
       <input type="hidden" name="install_script" value="{{install_url}}">
       <textarea name="script_body">{{script_body}}</textarea>
       <p class="warning" data-keep-if="ask_overwrite">Script with that name already

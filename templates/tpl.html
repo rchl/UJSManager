@@ -20,10 +20,10 @@
     </div>
     <ul id="scripts_list">
       <li data-list="scripts">
-        <form name="{{scripts[].filename}}" handler="toggleItem">
+        <form name="{{scripts[].filename}}">
           <button type="button" class="edit reset" data-keep-if="scripts[].hassettings"
             title="Edit script settings" handler="loadSettings"><img alt="Settings"></button>
-          <div data-keep-if="scripts[].isdirectory">
+          <div data-keep-if="scripts[].isdirectory" handler="toggleItem">
             <button type="button" class="folder reset" handler="changeDirectory"><img alt="Dir">
               <span class="name">{{scripts[].prettyname}}</span></button>
           </div>

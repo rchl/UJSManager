@@ -12,6 +12,7 @@ var
   /* DON'T FORGET TO UPDATE FOR EVERY RELEASE !!! */
   SERVICE_VERSION = '2.1',
   service_path = 'http://' + opera.io.webserver.hostName + opera.io.webserver.currentServicePath,
+  service_path_admin = 'http://admin.' + opera.io.webserver.hostName + opera.io.webserver.currentServicePath,
   static_files = [],
   data = { scripts: getAllUserScripts(null, true) };
 
@@ -25,7 +26,7 @@ function handleRequest( event )
 {
   var response = event.connection.response;
   var request = event.connection.request;
-  var forceOwner = (request.ip == '127.0.0.1');
+  var isOwner = event.connection.isOwner; // || (request.ip == '127.0.0.1');
 
   if ( isPublicFile(request.uri) )
   {
@@ -40,6 +41,7 @@ function handleRequest( event )
   // and remote users can't connect to it anyway.
   if ( request.bodyItems['install_script'] )
   {
+    // show error if not corect id given
     if ( !request.bodyItems['unique_id']
          || request.bodyItems['unique_id'][0] != getPref('unique_id') )
     {
@@ -48,50 +50,79 @@ function handleRequest( event )
       return;
     }
 
-    var tpldata = {
-      admin_url     : 'http://' + (forceOwner?'':'admin.') + request.host + opera.io.webserver.currentServicePath,
-      install_url   : request.bodyItems['install_script'][0],
-      script_body   : request.bodyItems['script_body'][0],
-      ask_overwrite : false,
-      old_header    : null,
-      new_header    : null
-    };
-
-    // extract file name from path
-    var filename = tpldata.install_url.match(/.+\/([^/?]+)/);
-    if ( filename )
+    // pre-installation dialog which shows script info and install button
+    if ( !request.bodyItems['confirm'] )
     {
-      filename = filename[1];
-      // check if file already exists and ask for overwrite if yes
-      var existing_body = readFile(filename);
-      if ( existing_body !== null )
+      var tpldata = {
+        admin_url     : service_path_admin,
+        install_url   : request.bodyItems['install_script'][0],
+        script_body   : request.bodyItems['script_body'][0],
+        unique_id     : request.bodyItems['unique_id'][0],
+        ask_overwrite : false,
+        old_header    : null,
+        new_header    : null
+      };
+
+      // extract file name from path
+      var filename = tpldata.install_url.match(/.+\/([^/?]+)/);
+      if ( filename )
       {
-        tpldata.ask_overwrite = true;
-        tpldata.old_header = getUserScriptHeader(existing_body)||{'<missing>':''};
-        tpldata.new_header = getUserScriptHeader(tpldata.script_body)||{'<missing>':''};
+        filename = filename[1];
+        // check if file already exists and ask for overwrite if yes
+        var existing_body = readFile(filename);
+        if ( existing_body !== null )
+        {
+          tpldata.ask_overwrite = true;
+          tpldata.old_header = getUserScriptHeader(existing_body)||{'<missing>':''};
+          tpldata.new_header = getUserScriptHeader(tpldata.script_body)||{'<missing>':''};
 
+        }
       }
-    }
-    else
-    {
-      response.write( "Error. UJS Manager couldn't extract filename from path." );
+      else
+      {
+        response.write( "Error. UJS Manager couldn't extract filename from path." );
+        response.close();
+        return;
+      }
+
+      var template = new Markuper( 'templates/dialog.html', tpldata );
+      response.write( template.parse().html() );
       response.close();
       return;
     }
+    else if ( isOwner ) // handles actual installation of script after confirming
+    {
+      var
+        script_uri = unescape(request.bodyItems['install_script'][0]),
+        script_body = request.bodyItems['script_body'][0],
+        overwrite = ( request.bodyItems['overwrite'] ? true : false ),
+        filename = script_uri.match(/.+\/([^/?]+)/);
 
-    var template = new Markuper( 'templates/dialog.html', tpldata );
-    response.write( template.parse().html() );
-    response.close();
-    return;
+      // we are pretty sure that regexp above will match as it did in install dialog already
+      filename = filename[1];
+
+      // install file if there is none already
+      widget.showNotification(
+        createFile(filename, script_body, overwrite) ?
+          ( overwrite ? 'User script "' + filename + '" updated': 'User script "' + filename + '" installed' )
+          : 'Error installing "' + filename + '"!'
+      );
+
+      // redirect to admin part
+      response.setStatusCode('303');
+      response.setResponseHeader('Location', service_path_admin);
+      response.close();
+      return;
+    }
   }
 
   // not owners not allowed unless they request local
   // address which means they are owners (just running without unite account)
-  if ( !event.connection.isOwner && !forceOwner )
+  if ( !isOwner )
   {
     var tpldata = {
       msg      : $('<p>UJS Manager is made to be only accessible from Opera running this service.</p>' +
-                   '<p>If you are the owner of this service, go to <a href="http://admin.' + request.host + opera.io.webserver.currentServicePath + '" onclick="location.replace(this.href);return false;">Admin section</a>.</p>' +
+                   '<p>If you are the owner of this service, go to <a href="' + service_path_admin + '" onclick="location.replace(this.href);return false;">Admin section</a>.</p>' +
                    '<p>If you want to download UJS Manager, go to <a href="http://unite.opera.com/application/401/">download page</a>.</p>')
     };
 
@@ -101,30 +132,6 @@ function handleRequest( event )
     return;
   }
 
-  if ( request.bodyItems['install_script'] )
-  {
-    var
-      script_uri = unescape(request.bodyItems.install_script[0]),
-      script_body = request.bodyItems.script_body[0],
-      overwrite = ( request.bodyItems.overwrite ? true : false ),
-      filename = script_uri.match(/.+\/([^/?]+)/);
-
-    // we are pretty sure that this above will match as it did in install dialog already
-    filename = filename[1];
-
-    // install file if there is none already
-    widget.showNotification(
-      createFile(filename, script_body, overwrite) ?
-        ( overwrite ? 'User script "' + filename + '" updated': 'User script "' + filename + '" installed' )
-        : 'Error installing "' + filename + '"!'
-    );
-
-    // redirect to admin part
-    response.setStatusCode('303');
-    response.setResponseHeader('Location', 'http://' + request.host + opera.io.webserver.currentServicePath);
-    response.close();
-    return;
-  }
 
   // handle xhr calls with json
   if ( request.bodyItems['action'] )
