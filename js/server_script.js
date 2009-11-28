@@ -220,7 +220,7 @@ function handleXHRRequest(query)
       break;
 
     case 'getsettings':
-      return getScriptSettings(q_filename);
+      return Script.getSettings(q_filename);
       break;
     case 'changesetting':
       var q_exactmatch = query['exactmatch'][0];
@@ -317,6 +317,45 @@ var Script = new function()
       }
     }
     return (data?data:null);
+  }
+
+  /**
+    * gathers all settings from user script by looking for matching patters
+    * @return array of objects with specific keys
+    */
+  this.getSettings = function(filename)
+  {
+    var content = readFile(filename);
+    if ( !content ) return false;
+
+    // matches all options of kind /*@opname@optype@*/opvalue/*@*/
+    var matches = content.match(/\/\*@[^@]+@(bool|int|string|regexp)@\*\/.*\/\*@\*\//g);
+    if ( !matches ) return false;
+
+    // matches individual types of given option
+    var
+      ret = [],
+      optionmatch = /^\/\*@([^@]+)@([^@]+)@\*\/(.*)\/\*@\*\/$/;
+
+
+    /*
+     * option object:
+     *  name,
+     *  type,
+     *  value,
+     *  exactmatch
+     */
+    for ( var i=0; i<matches.length; i++ )
+    {
+      var match = matches[i].match(optionmatch);
+      ret.push({
+        name        : match[1],
+        type        : match[2],
+        value       : match[3],
+        exactmatch  : matches[i]
+      });
+    }
+    return ret;
   }
 
   this.changeSetting = function(filename, exactmatch, name, value)

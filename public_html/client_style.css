@@ -78,9 +78,9 @@ button img {
   background: -o-skin("Push Button Skin");
   position: absolute;
   right: 0;
-  margin: .3em;
+  margin: .4em .3em .3em .3em;
   padding: 3px 4px 0 0;
-  font-size: 15px;
+  font-size: 14px;
   cursor: pointer;
   opacity: .8;
   color: #555;
@@ -92,12 +92,14 @@ button img {
 }
 
 #create_script img {
-  vertical-align: bottom;
+  display: inline-block;
+  vertical-align: middle;
+  margin: -3px 0;
   content: -o-skin("Add/Remove Panels");
 }
 
 #quickfind_container {
-  padding: .5em 70px 0 .5em;
+  padding: .5em 65px 0 .5em;
 }
 
 #quickfind {
