@@ -75,38 +75,80 @@ button img {
 }
 
 #create_script {
-  background: -o-skin("Selector Button Skin.pressed");
-  padding: .1em;
+  background: -o-skin("Push Button Skin");
   position: absolute;
-  white-space: nowrap;
   right: 0;
-  margin: .2em 0;
-  font-size: 20px;
+  margin: .3em;
+  padding: 3px 4px 0 0;
+  font-size: 15px;
   cursor: pointer;
   opacity: .8;
   color: #555;
 }
 
 #create_script:hover {
+  background: -o-skin("Push Default Button Skin.pressed");
   opacity: 1;
 }
 
 #create_script img {
-  vertical-align: top;
-  content: -o-skin("Add service");
+  vertical-align: bottom;
+  content: -o-skin("Add/Remove Panels");
 }
 
 #quickfind_container {
-  padding: .5em 7em 0 .5em;
+  padding: .5em 70px 0 .5em;
 }
 
 #quickfind {
   padding-left: 22px;
   width: 100%;
   height: 22px;
-  background: #fff url(search_default.png) no-repeat 2px 2px;
+  background: #fff url("search_default.png") no-repeat 2px 2px;
   border: 1px solid #777;
   box-sizing: border-box;
+}
+
+#toolbar_container {
+  padding: .2em .5em;
+  margin: .5em;
+}
+
+#toolbar_container .button {
+  display: inline-block;
+  position: relative;
+  opacity: .7;
+  background: -o-skin("Dialog Page Skin");
+  padding: 1px 4px 3px 4px;
+  margin: 0 0 0 -4px;
+  cursor: pointer;
+}
+
+#toolbar_container .menu {
+  display: none;
+  position: absolute;
+  background: -o-skin("Dialog Page Skin");
+  top: 0;
+  left: 0;
+  padding: 3px 4px 5px 4px;
+  z-index: 1;
+  width: 100%;
+}
+
+#toolbar_container .button:hover .menu {
+  display: block;
+}
+
+#toolbar_container .menu li a {
+  cursor: pointer;
+  display: block;
+  color: #000;
+  padding: 2px 3px;
+}
+
+#toolbar_container .menu li a:hover {
+  background: -o-skin("Cycler Page Button Skin.hover");
+  color: navy;
 }
 
 #scripts_list  {
@@ -144,11 +186,11 @@ button img {
 }
 
 #scripts_list .toggle img.disabled {
-  content: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8%2F9hAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1%2B%2FAAAABV0RVh0Q3JlYXRpb24gVGltZQAyOS82LzA55Xg1zgAAABx0RVh0U29mdHdhcmUAQWRvYmUgRmlyZXdvcmtzIENTNAay06AAAAGASURBVDiNpZPLK0RRHMc%2Fxz3FxmNBSEosBkVXSpQyFqRYTB4Lq2ujbCby%2FAuUZDESCyuWUwwp2ciwF3cjbMjWCoW45xoLznXnwcL86tSv7%2B%2F7e%2F%2BOSCQSZCM5WXkDUitCCA%2Bc3c0dAcYB8xuygeXF0NuG5ujKhacIwexubhEQ9zmmig10LobeHrSf9FuVMv5y5tsWB5o04M0gHC2wHFeajivJ9KzWKHVlIRxXmuFogZU2A6WMid%2FSdgbGaKzoI08WcXZ3ADABbCZVoFxpKleiXElNcQdaLy806W2Y4%2BX9kdX4iMa9Nr0AjjJwlEFL1TBT3TsMNc%2FjKAOrbQUQLBwM8PT67PEytCBtwDy5ihEobaerfhSzsoeS%2FErWTya5vb%2F20%2B30AK4RATYA1o5m%2BEgIOgKDbJ1GiF%2FGgJ%2BsQEQrSXcwsFJ9jm%2BNwdp%2Bjq9iqTO1t8M3TZnvwJVB4FgHObzYS6XYQNAPJFWgpXepzuJrVf5TjuxPX25qTtop%2F1ey%2Fo2ftG6clPyKKlYAAAAASUVORK5CYII%3D);
+  content: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8%2F9hAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1%2B%2FAAAABV0RVh0Q3JlYXRpb24gVGltZQAyOS82LzA55Xg1zgAAABx0RVh0U29mdHdhcmUAQWRvYmUgRmlyZXdvcmtzIENTNAay06AAAAGASURBVDiNpZPLK0RRHMc%2Fxz3FxmNBSEosBkVXSpQyFqRYTB4Lq2ujbCby%2FAuUZDESCyuWUwwp2ciwF3cjbMjWCoW45xoLznXnwcL86tSv7%2B%2F7e%2F%2BOSCQSZCM5WXkDUitCCA%2Bc3c0dAcYB8xuygeXF0NuG5ujKhacIwexubhEQ9zmmig10LobeHrSf9FuVMv5y5tsWB5o04M0gHC2wHFeajivJ9KzWKHVlIRxXmuFogZU2A6WMid%2FSdgbGaKzoI08WcXZ3ADABbCZVoFxpKleiXElNcQdaLy806W2Y4%2BX9kdX4iMa9Nr0AjjJwlEFL1TBT3TsMNc%2FjKAOrbQUQLBwM8PT67PEytCBtwDy5ihEobaerfhSzsoeS%2FErWTya5vb%2F20%2B30AK4RATYA1o5m%2BEgIOgKDbJ1GiF%2FGgJ%2BsQEQrSXcwsFJ9jm%2BNwdp%2Bjq9iqTO1t8M3TZnvwJVB4FgHObzYS6XYQNAPJFWgpXepzuJrVf5TjuxPX25qTtop%2F1ey%2Fo2ftG6clPyKKlYAAAAASUVORK5CYII%3D");
 }
 
 #scripts_list .toggle img {
-  content: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8%2F9hAAAABGdBTUEAALGPC%2FxhBQAAAAlwSFlzAAALEAAACxABrSO9dQAAABl0RVh0U29mdHdhcmUAUGFpbnQuTkVUIHYzLjUuMU7nOPkAAADXSURBVDhPzZJdCoQwDIR99UY9W44hmCKIiCAFb%2BTPGRT0AG4m2EVspU8LW%2FhgmkyGQpNlf3mGYTACCXwBbZKPFVP%2BGPQB96D8Ncg5RwInoGhA3%2FdGYHCeJx%2FHoRpAo%2Bbv8AYhXdeRwGDfdx1YlkWBRs334Q0C2rblO%2FM86yCAfvaDgKZp%2BM40Td8A6Gc%2FCKjrmgQG27bp8DiOCjRqvg9vEFBVlREYYGBdV9UAGjV%2Fhzf6E9ZaEjhB%2FBuRWJZlLpDAL6D3vkj%2BWUVRGIEEvoBOr3Jy139h%2BABGiUOSPP25xQAAAABJRU5ErkJggg%3D%3D);
+  content: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8%2F9hAAAABGdBTUEAALGPC%2FxhBQAAAAlwSFlzAAALEAAACxABrSO9dQAAABl0RVh0U29mdHdhcmUAUGFpbnQuTkVUIHYzLjUuMU7nOPkAAADXSURBVDhPzZJdCoQwDIR99UY9W44hmCKIiCAFb%2BTPGRT0AG4m2EVspU8LW%2FhgmkyGQpNlf3mGYTACCXwBbZKPFVP%2BGPQB96D8Ncg5RwInoGhA3%2FdGYHCeJx%2FHoRpAo%2Bbv8AYhXdeRwGDfdx1YlkWBRs334Q0C2rblO%2FM86yCAfvaDgKZp%2BM40Td8A6Gc%2FCKjrmgQG27bp8DiOCjRqvg9vEFBVlREYYGBdV9UAGjV%2Fhzf6E9ZaEjhB%2FBuRWJZlLpDAL6D3vkj%2BWUVRGIEEvoBOr3Jy139h%2BABGiUOSPP25xQAAAABJRU5ErkJggg%3D%3D");
 }
 
 #scripts_list .folder {
@@ -163,6 +205,11 @@ button img {
 #scripts_list .edit {
   position: absolute;
   right: 3px;
+  opacity: .8;
+}
+
+#scripts_list .edit:hover {
+  opacity: 1;
 }
 
 #scripts_list .edit img {

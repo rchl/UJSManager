@@ -14,9 +14,20 @@
     <span id="msg"><a href="http://unite.opera.com/application/401/"
     target="_blank">UJS Manager update available!</a></span></div>
   <div id="main_container">
-    <button id="create_script" class="reset" title="Create new script file"><img>New</button>
+    <button id="create_script" class="reset" title="Create new script file"><img alt="new script">NEW</button>
     <div id="quickfind_container">
       <input type="text" id="quickfind" value="Quick find">
+    </div>
+    <div id="toolbar_container">
+      <a href="http://my.opera.com/community/forums/forum.dml?id=120"
+        target="_blank" style="float: right; text-decoration: underline;">Get User Scripts</a>
+      <div id="sortorder" class="button">Sort by: {{sorting}}
+        <ul class="menu">
+          <li><a href="?sorting=name">name</a></li>
+          <li><a href="?sorting=status">enabled status</a></li>
+        </ul>
+      </div>
+      <div onclick="location.reload();" id="changes" style="display:none">Detected changes. Click to see them.</div>
     </div>
     <ul id="scripts_list">
       <li data-list="scripts">
@@ -28,8 +39,9 @@
               <span class="name">{{scripts[].prettyname}}</span></button>
           </div>
           <div data-remove-if="scripts[].isdirectory" handler="toggleItem">
-            <button type="button" name="check" class="toggle reset" handler="toggleScript"><img class="disabled"
-              data-keep-if="scripts[].isenabled" alt="on"><img data-remove-if="scripts[].isenabled" alt="off"></button>
+            <button type="button" name="check" class="toggle reset" handler="toggleScript"
+              title="Click to toggle"><img class="disabled" data-keep-if="scripts[].isenabled" alt="on"><img
+              data-remove-if="scripts[].isenabled" alt="off"></button>
             <span class="name" title="{{scripts[].prettyname}}" handler="toggleItem">{{scripts[].prettyname}}</span>
             <div class="desc">
               <div class="script_infobox" data-keep-if="scripts[].header">

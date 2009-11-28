@@ -1,9 +1,9 @@
-/*
- *
- * UJS Manager Unite Application
- * Rafal Chlodnicki, 2009
- *
- */
+/**
+  *
+  * UJS Manager Unite Application
+  * Rafal Chlodnicki, 2009
+  *
+  */
 
 // this way it's much easier to handle new elements added
 // to document dynamically from html code
@@ -49,16 +49,7 @@ $(document).ready(function() {
   $('#close_settings').click(ScriptSettings.close);
 
   // handler for hiding update notifier
-  $('#close_notifier').click(function() {
-    var _this = this;
-
-    $.post('', { action: 'remindmelater' },
-      function()
-      {
-        // hide notifier
-        $(_this).parent().slideUp('normal');
-      });
-  });
+  $('#close_notifier').click(Notifier.close);
 
   // handler for quick find
   $('#quickfind').bind('focus input', function(e) {
@@ -90,6 +81,9 @@ $(document).ready(function() {
       location.hash = '';
       break;
   }
+
+  // set up periodical check for changes in directory (every 10 minutes)
+  window.interval = setInterval(ScriptsList.checkIfModified, 1000*60*10);
 
 });
 
@@ -228,6 +222,18 @@ var ScriptsList = new function()
       }, 'json');
   }
 
+  this.checkIfModified = function()
+  {
+    $.post('', { action: 'haschanged' },
+      function(data)
+      {
+        if (data && data.modified)
+        {
+          $('#changes').slideDown('normal');
+          clearInterval(window.interval);
+        }
+      }, 'json');
+  }
 }
 
 var ScriptSettings = new function()
@@ -511,6 +517,9 @@ var EditDialog = new function()
 
   this.save = function()
   {
+    if ( !(edit_field.value && edit_filename.value) )
+      return alert("Can't save empty value");
+
     if (save_callback)
     {
       save_callback.call(_self, edit_form);
@@ -545,22 +554,39 @@ var EditDialog = new function()
             alert('Saving failed due to unknown problem');
           else if (resp.error)
             alert(resp.error);
-          else if (resp.new_script)
+          else
           {
-            var s = $(resp.new_script);
-            s[0].style.opacity = 0;
-            $('#scripts_list').append(s);
-            s[0].scrollIntoView();
-            s.fadeTo(2000, 1);
+            if (resp.new_script)
+            {
+              var s = $(resp.new_script);
+              s[0].style.opacity = 0;
+              $('#scripts_list').append(s);
+              s[0].scrollIntoView();
+              s.fadeTo(2000, 1);
+            }
+            EditDialog.close();
           }
 
           ifr.parentNode.removeChild(ifr);
-          EditDialog.close();
         }
         ifr.contentDocument.body.appendChild(form);
         form.submit();
       }
       document.documentElement.appendChild(ifr);
     }
+  }
+}
+
+var Notifier = new function()
+{
+  this.close = function() {
+    var _this = this;
+
+    $.post('', { action: 'remindmelater' },
+      function()
+      {
+        // hide notifier
+        $(_this).parent().slideUp('normal');
+      });
   }
 }

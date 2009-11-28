@@ -1,26 +1,22 @@
-/*
- *
- * UJS Manager Unite Application
- * Rafal Chlodnicki, 2009
- *
- */
+/**
+  *
+  * UJS Manager Unite Application
+  * Rafal Chlodnicki, 2009
+  *
+  */
 
 var
   SHARED_DIR = opera.io.filesystem.mountSystemDirectory('shared'),
   PUBLIC_DIR = opera.io.filesystem.mountSystemDirectory('application'),
   SERVICE_DOAP = 'http://unite.opera.com/service/doap/401/',
-  /* DON'T FORGET TO UPDATE FOR EVERY RELEASE !!! */
+  /* DON'T FORGET TO UPDATE VERSION FOR EVERY RELEASE !!! */
   SERVICE_VERSION = '2.1',
-  service_path = 'http://' + opera.io.webserver.hostName + opera.io.webserver.currentServicePath,
-  service_path_admin = 'http://admin.' + opera.io.webserver.hostName + opera.io.webserver.currentServicePath,
-  static_files = [],
-  data = { scripts: getAllUserScripts(null, true) };
+  SERVICE_PATH = 'http://' + opera.io.webserver.hostName + opera.io.webserver.currentServicePath,
+  SERVICE_PATH_ADMIN = 'http://admin.' + opera.io.webserver.hostName + opera.io.webserver.currentServicePath,
+  DATA;
 
-
-sharePublicHtml();
 
 opera.io.webserver.addEventListener( '_request', handleRequest, false );
-
 
 function handleRequest( event )
 {
@@ -28,7 +24,7 @@ function handleRequest( event )
   var request = event.connection.request;
   var isOwner = event.connection.isOwner; // || (request.ip == '127.0.0.1');
 
-  if ( isPublicFile(request.uri) )
+  if ( PublicFiles.isPublic(request.uri) )
   {
     response.closeAndRedispatch();
     return;
@@ -54,7 +50,7 @@ function handleRequest( event )
     if ( !request.bodyItems['confirm'] )
     {
       var tpldata = {
-        admin_url     : service_path_admin,
+        admin_url     : SERVICE_PATH_ADMIN,
         install_url   : request.bodyItems['install_script'][0],
         script_body   : request.bodyItems['script_body'][0],
         unique_id     : request.bodyItems['unique_id'][0],
@@ -73,8 +69,8 @@ function handleRequest( event )
         if ( existing_body !== null )
         {
           tpldata.ask_overwrite = true;
-          tpldata.old_header = getUserScriptHeader(existing_body)||{'<missing>':''};
-          tpldata.new_header = getUserScriptHeader(tpldata.script_body)||{'<missing>':''};
+          tpldata.old_header = Script.parseHeader(existing_body)||{'<missing>':''};
+          tpldata.new_header = Script.parseHeader(tpldata.script_body)||{'<missing>':''};
 
         }
       }
@@ -110,7 +106,7 @@ function handleRequest( event )
 
       // redirect to admin part
       response.setStatusCode('303');
-      response.setResponseHeader('Location', service_path_admin);
+      response.setResponseHeader('Location', SERVICE_PATH_ADMIN);
       response.close();
       return;
     }
@@ -122,7 +118,7 @@ function handleRequest( event )
   {
     var tpldata = {
       msg      : $('<p>UJS Manager is made to be only accessible from Opera running this service.</p>' +
-                   '<p>If you are the owner of this service, go to <a href="' + service_path_admin + '" onclick="location.replace(this.href);return false;">Admin section</a>.</p>' +
+                   '<p>If you are the owner of this service, go to <a href="' + SERVICE_PATH_ADMIN + '" onclick="location.replace(this.href);return false;">Admin section</a>.</p>' +
                    '<p>If you want to download UJS Manager, go to <a href="http://unite.opera.com/application/401/">download page</a>.</p>')
     };
 
@@ -132,15 +128,20 @@ function handleRequest( event )
     return;
   }
 
-
   // handle xhr calls with json
   if ( request.bodyItems['action'] )
   {
-    var resp = handleXHRQuery(request.bodyItems);
+    var resp = handleXHRRequest(request.bodyItems);
     response.setResponseHeader('Content-type', 'text/plain');
     response.write(JSON.stringify(resp));
     response.close();
     return;
+  }
+
+  // set sorting pref
+  if ( request.queryItems['sorting'] )
+  {
+    savePref('sorting', request.queryItems['sorting'][0]);
   }
 
   var
@@ -153,19 +154,20 @@ function handleRequest( event )
     istopdir = false;
   }
 
-  data = {
-    scripts     : getAllUserScripts(dir_query, istopdir),
+  DATA = {
+    scripts     : ScriptsDirectory.getAllUserScripts(dir_query, istopdir),
+    sorting     : getPref('sorting')||'name',
     version     : SERVICE_VERSION,
-    newversion  : updater.checkUpdate()
+    newversion  : Updater.checkUpdate()
   }
 
-  var template = new Markuper( 'templates/tpl.html', data );
+  var template = new Markuper( 'templates/tpl.html', DATA );
 
   response.write( template.parse().html() );
   response.close();
 }
 
-function handleXHRQuery(query)
+function handleXHRRequest(query)
 {
   var
     action = query['action'][0],
@@ -209,6 +211,7 @@ function handleXHRQuery(query)
           };
         }
 
+        ScriptsDirectory.hasChanged();
         return {
           result: unescape(File.name),
           enabled: enabled
@@ -223,10 +226,11 @@ function handleXHRQuery(query)
       var q_exactmatch = query['exactmatch'][0];
       var q_name = query['name'][0];
       var q_value = query['value'][0];
-      return changeScriptSetting(q_filename, q_exactmatch, q_name, q_value);
+      return Script.changeSetting(q_filename, q_exactmatch, q_name, q_value);
       break;
     case 'delete':
       var result = deleteFile(q_filename);
+      ScriptsDirectory.hasChanged();
       return result||{error: 'Deleting file failed!'};
     case 'readtxt':
       return readFile(q_filename)||{error: "Wasn't able to read file or file empty!"}
@@ -236,20 +240,25 @@ function handleXHRQuery(query)
       {
         if (query['can_overwrite'])
         {
-          return getUserScript(File);
+          // modified existing file
+          return ScriptsDirectory.getUserScript(File);
         }
         else
         {
+          // created new file
+          ScriptsDirectory.hasChanged();
           var arr = [];
-          arr.push(getUserScript(File));
+          arr.push(ScriptsDirectory.getUserScript(File));
           var template = new Markuper( 'templates/tpl.html', { scripts: arr } );
-          return { new_script: template.parse().select('li')[0].outerHTML };
+          return { new_script: template.parse().select('#scripts_list')[0].innerHTML };
         }
       }
       else
-        return {error: "Wasn't able to write file. Possibly file already exists!"};
+        return {error: "Wasn't able to write file. Possibly file with that name already exists!"};
+    case 'haschanged':
+      return { modified: ScriptsDirectory.hasChanged() };
     case 'remindmelater':
-      updater.remindMeLater();
+      Updater.remindMeLater();
       return true;
     default:
       return {error: 'Option not implemented!'};
@@ -257,389 +266,282 @@ function handleXHRQuery(query)
   return false;
 }
 
-function sharePublicHtml()
+/**
+  * Script object
+  */
+var Script = new function()
 {
-  var public_dir = PUBLIC_DIR.resolve('/public_html/');
-  public_dir.refresh();
-
-  for ( var i=0,file; file=public_dir[i]; i++ )
+  /**
+    * creates key-value object from user script header
+    * @return object of key-value pairs
+    */
+  this.parseHeader = function(content)
   {
-    if ( file.isFile )
+    var
+      start = content.indexOf('// ==UserScript=='),
+      end = content.indexOf('// ==/UserScript=='),
+      desc = null;
+
+    if ( start!=-1 && end!=-1 )
     {
-      var path = file.path, match = null;
-      if ( match = file.path.match(/(\/[^\/]+)$/) )
-      {
-        path = match[1];
-      }
-      static_files.push( path );
+      // add length of header start string
+      start += 18
+      desc = content.substr(start, end-start);
+      // remove trailing/ending spaces
+      desc = desc.replace(/(^\s+|\s+$)/, '');
+      // remove some stuph
+      desc = desc.replace(/^\/\/\s+/gm, '');
     }
-  }
-}
 
-function isPublicFile(uri)
-{
-  for ( var i=0; i<static_files.length; i++ )
-  {
-    var item = static_files[i];
-    if ( uri.indexOf(item)>-1 )
-      return true;
+    if ( !desc )
+      return null;
+
+    var
+      lines = desc.split('\n'),
+      line,
+      rgx_match = null,
+      line_rgx = /^@(.+?)\s+(.+)/,
+      data = [];
+
+    for ( var i=0; i<lines.length; i++ )
+    {
+      line = lines[i];
+      // skip empty lines
+      if ( !line ) continue;
+
+      rgx_match = line.match(line_rgx);
+      if ( rgx_match && rgx_match.length > 1 )
+      {
+        var name = rgx_match[1], val = rgx_match[2];
+        data.push( { key: name, value: trim(val) } );
+      }
+    }
+    return (data?data:null);
   }
-  return false;
+
+  this.changeSetting = function(filename, exactmatch, name, value)
+  {
+    var content = readFile(filename);
+
+    var newval = exactmatch.replace(/\*\/.*\/\*@\*\/$/, '*/'+value+'/*@*/');
+
+    content = content.replace(exactmatch, newval);
+
+    if ( writeFile(filename, content, true) )
+    {
+      return {
+        filename  : filename,
+        name      : name,
+        value     : value,
+        exactmatch: newval
+      };
+    }
+    return {};
+  }
 }
 
 /**
-  * Reads all user scripts in directory
-  * @returns array of script objects
+  * Scripts Directory object
   */
-function getAllUserScripts(requested_dir, istopdir)
+var ScriptsDirectory = new function()
 {
-  if ( requested_dir && SHARED_DIR.resolve(requested_dir).exists )
+  // used to check for modifications made in directory
+  var files_arr = [];
+
+  /**
+    * Reads all user scripts in directory
+    * @returns array of script objects
+    */
+  this.getAllUserScripts = function(requested_dir, istopdir)
   {
-    SHARED_DIR = SHARED_DIR.resolve(requested_dir);
-  }
-  else
-  {
-    SHARED_DIR = opera.io.filesystem.mountSystemDirectory('shared');
-  }
+    if ( requested_dir && SHARED_DIR.resolve(requested_dir).exists )
+    {
+      SHARED_DIR = SHARED_DIR.resolve(requested_dir);
+    }
+    else
+    {
+      SHARED_DIR = opera.io.filesystem.mountSystemDirectory('shared');
+    }
 
-  SHARED_DIR.refresh();
+    SHARED_DIR.refresh();
 
-  var
-    scripts = [],
-    ujs_installer = false;
+    var
+      scripts = [],
+      ujs_installer = false,
+      sorting = getPref('sorting')||'name';
 
-  // add link to parent directory
-  if ( SHARED_DIR.parent.exists )
-  {
-    scripts.push
-    ({
-      prettyname  : '..',
-      filename    : SHARED_DIR.parent.path.replace('mountpoint:/', ''),
-      isdirectory : true
-    });
-  }
-
-  var obj = null;
-
-  for ( var i = 0, file; file = SHARED_DIR[i]; i++ )
-  {
-    // special handling for directories
-    if ( file.isDirectory )
+    // add link to parent directory
+    if ( SHARED_DIR.parent.exists )
     {
       scripts.push
       ({
-        prettyname  : unescape(file.name),
-        filename    : file.path.replace('mountpoint:/', ''),
+        prettyname  : '..',
+        filename    : SHARED_DIR.parent.path.replace('mountpoint:/', ''),
         isdirectory : true
       });
-
-      continue;
     }
 
-    // skip if no js extension (or disabled - .xx)
-    if ( !(/\.js(\.xx|)$/i.test(file.name)) ) continue;
+    var
+      obj = null
+      ,jsext = /\.js(\.xx|)$/i;
+    files_arr = [];
 
-    obj = getUserScript(file);
-    scripts.push( obj );
-
-    // check for user js installer
-    if ( obj.prettyname == 'UJS Manager - script installer' )
-      ujs_installer = obj;
-  }
-
-  // only top directory should get ujs installer script
-  if ( istopdir )
-  {
-    // copy user js installer if not found or older
-    var scr_installer = getUserScript( PUBLIC_DIR.resolve('/js/ujs_manager_installer.js') );
-
-    if ( !ujs_installer
-        || getPropOfArrayItem('version', scr_installer.header) > getPropOfArrayItem('version', ujs_installer.header)
-        || getPropOfArrayItem('servicepath', ujs_installer.header) != service_path
-        || getPropOfArrayItem('uniqueid', ujs_installer.header) != getPref('unique_id') )
+    for ( var i = 0, file; file = SHARED_DIR[i]; i++ )
     {
-      // add user js installer to list because it wasn't there when reading dir
-      if ( !ujs_installer )
-        scripts.push( scr_installer );
-
-      // insert current service path to ujs installer
-      scr_installer.filecontent = scr_installer.filecontent.replace(
-        /\{\{service_path\}\}/g, service_path);
-
-      // generate unique id (for script installation)
-      var unique_id = Math.random();
-      scr_installer.filecontent = scr_installer.filecontent.replace(
-        /\{\{unique_id\}\}/g, unique_id);
-      savePref('unique_id', unique_id);
-
-      writeFile('ujs_manager_installer.js', scr_installer.filecontent, true);
-    }
-  }
-
-  // sort scripts by name
-  scripts.sort(
-    function(a, b)
-    {
-      // put directories on top
-      if ( a.isdirectory != b.isdirectory )
+      // special handling for directories
+      if ( file.isDirectory )
       {
-        return (a.isdirectory?-1:1);
+        scripts.push
+        ({
+          prettyname  : unescape(file.name),
+          filename    : file.path.replace('mountpoint:/', ''),
+          isdirectory : true
+        });
+
+        continue;
       }
-      return (a.prettyname.toLowerCase() < b.prettyname.toLowerCase()?-1:1);
+
+      // skip if no js extension (or disabled - .xx)
+      if ( !(jsext.test(file.name)) ) continue;
+
+      files_arr.push(file.path);
+
+      obj = ScriptsDirectory.getUserScript(file);
+      scripts.push( obj );
+
+      // check for user js installer
+      if ( obj.prettyname == 'UJS Manager - script installer' )
+        ujs_installer = obj;
     }
-  );
 
-  return scripts;
-}
-
-/**
-  * Creates object from user script file
-  * @returns script object
-  */
-function getUserScript(File)
-{
-  var obj = {
-      prettyname  : unescape(File.name.replace(/\.xx$/i, '')),
-      filename    : File.name,
-      isenabled   : ( ( /\.js$/i.test(File.name) ) ? true : false ),
-      isdirectory : false,
-      hassettings : false,
-      filecontent : readFile(File.path),
-      header      : null
-    };
-
-  if ( obj.filecontent )
-  {
-    // if at last one setting found in file then add edit button
-    if ( obj.filecontent.match(/\/\*@[^@]+@(bool|int|string)@\*\/.+\/\*@\*\//g) )
+    // only top directory should get ujs installer script
+    if ( istopdir )
     {
-      obj.hassettings = true;
+      // copy user js installer if not found or older
+      var scr_installer = ScriptsDirectory.getUserScript( PUBLIC_DIR.resolve('/js/ujs_manager_installer.js') );
+
+      if ( !ujs_installer
+          || getPropOfArrayItem('version', scr_installer.header) > getPropOfArrayItem('version', ujs_installer.header)
+          || getPropOfArrayItem('servicepath', ujs_installer.header) != SERVICE_PATH
+          || getPropOfArrayItem('uniqueid', ujs_installer.header) != getPref('unique_id') )
+      {
+        // add user js installer to list because it wasn't there when reading dir
+        if ( !ujs_installer )
+          scripts.push( scr_installer );
+
+        // insert current service path to ujs installer
+        scr_installer.filecontent = scr_installer.filecontent.replace(
+          /\{\{SERVICE_PATH\}\}/g, SERVICE_PATH);
+
+        // generate unique id (for script installation)
+        var unique_id = Math.random();
+        scr_installer.filecontent = scr_installer.filecontent.replace(
+          /\{\{unique_id\}\}/g, unique_id);
+        savePref('unique_id', unique_id);
+
+        writeFile('ujs_manager_installer.js', scr_installer.filecontent, true);
+      }
     }
 
-    // read script header
-    obj.header = getUserScriptHeader(obj.filecontent);
-    if ( obj.header )
+    var sort_method = (function()
     {
-      // try to get pretty name
-      obj.prettyname = getPropOfArrayItem('name', obj.header)||obj.prettyname;
-    }
+      switch(sorting)
+      {
+        case 'status':
+          return function(a,b) {
+            if (a.isenabled != b.isenabled)
+              return (a.isenabled?-1:1);
+            return (a.prettyname.toLowerCase() < b.prettyname.toLowerCase()?-1:1);
+          };
+        case 'name':
+        default:
+          return function(a,b) {
+            return (a.prettyname.toLowerCase() < b.prettyname.toLowerCase()?-1:1);
+          };
+      }
+    })();
+
+    // sort scripts by choosen order
+    scripts.sort(
+      function(a, b)
+      {
+        // put directories on top
+        if ( a.isdirectory != b.isdirectory )
+          return (a.isdirectory?-1:1);
+        return sort_method(a, b);
+      }
+    );
+
+    return scripts;
   }
-  return obj;
-}
 
-/**
-  * creates key-value object from user script header
-  * @return object of key-value pairs
-  */
-function getUserScriptHeader(content)
-{
-  var
-    start = content.indexOf('// ==UserScript=='),
-    end = content.indexOf('// ==/UserScript=='),
-    desc = null;
-
-  if ( start!=-1 && end!=-1 )
+  /**
+    * Creates object from user script file
+    * @returns script object
+    */
+  this.getUserScript = function(File)
   {
-    // add length of header start string
-    start += 18
-    desc = content.substr(start, end-start);
-    // remove trailing/ending spaces
-    desc = desc.replace(/(^\s+|\s+$)/, '');
-    // remove some stuph
-    desc = desc.replace(/^\/\/\s+/gm, '');
-  }
+    var obj = {
+        prettyname  : unescape(File.name.replace(/\.xx$/i, '')),
+        filename    : File.name,
+        isenabled   : ( ( /\.js$/i.test(File.name) ) ? true : false ),
+        isdirectory : false,
+        hassettings : false,
+        filecontent : readFile(File.path),
+        header      : null
+      };
 
-  if ( !desc )
-    return null;
-
-  var
-    lines = desc.split('\n'),
-    line,
-    rgx_match = null,
-    line_rgx = /^@(.+?)\s+(.+)/,
-    data = [];
-
-  for ( var i=0; i<lines.length; i++ )
-  {
-    line = lines[i];
-    // skip empty lines
-    if ( !line ) continue;
-
-    rgx_match = line.match(line_rgx);
-    if ( rgx_match && rgx_match.length > 1 )
+    if ( obj.filecontent )
     {
-      var name = rgx_match[1], val = rgx_match[2];
-      data.push( { key: name, value: trim(val) } );
+      // if at last one setting found in file then add edit button
+      if ( obj.filecontent.match(/\/\*@[^@]+@(bool|int|string)@\*\/.+\/\*@\*\//g) )
+      {
+        obj.hassettings = true;
+      }
+
+      // read script header
+      obj.header = Script.parseHeader(obj.filecontent);
+      if ( obj.header )
+      {
+        // try to get pretty name
+        obj.prettyname = getPropOfArrayItem('name', obj.header)||obj.prettyname;
+      }
     }
+    return obj;
   }
-  return (data?data:null);
+
+  this.hasChanged = function()
+  {
+    var is_dirty = false;
+    var tmp = [];
+    var jsext = /\.js(\.xx|)$/i;
+
+    SHARED_DIR.refresh();
+
+    for (var i=0, f; f=SHARED_DIR[i]; i++)
+    {
+      if (!(jsext.test(f.path))) continue;
+      tmp.push(f.path);
+    }
+
+    for (var i=0, f; f=tmp[i]; i++)
+    {
+      if (f != files_arr[i])
+      {
+        is_dirty = true;
+      }
+    }
+
+    files_arr = tmp;
+    return is_dirty;
+  }
 }
+DATA = { scripts: ScriptsDirectory.getAllUserScripts(null, true) };
 
 /**
-  * gathers all settings from user script by looking for matching patters
-  * @return array of objects with specific keys
+  * Update checking
   */
-function getScriptSettings(filename)
-{
-  var content = readFile(filename);
-  if ( !content ) return false;
-
-  // matches all options of kind /*@opname@optype@*/opvalue/*@*/
-  var matches = content.match(/\/\*@[^@]+@(bool|int|string|regexp)@\*\/.*\/\*@\*\//g);
-  if ( !matches ) return false;
-
-  // matches individual types of given option
-  var
-    ret = [],
-    optionmatch = /^\/\*@([^@]+)@([^@]+)@\*\/(.*)\/\*@\*\/$/;
-
-
-  /*
-   * option object:
-   *  name,
-   *  type,
-   *  value,
-   *  exactmatch
-   */
-  for ( var i=0; i<matches.length; i++ )
-  {
-    var match = matches[i].match(optionmatch);
-    ret.push({
-      name        : match[1],
-      type        : match[2],
-      value       : match[3],
-      exactmatch  : matches[i]
-    });
-  }
-  return ret;
-}
-
-function changeScriptSetting(filename, exactmatch, name, value)
-{
-  var content = readFile(filename);
-
-  var newval = exactmatch.replace(/\*\/.*\/\*@\*\/$/, '*/'+value+'/*@*/');
-
-  content = content.replace(exactmatch, newval);
-
-  if ( writeFile(filename, content, true) )
-  {
-    return {
-      filename  : filename,
-      name      : name,
-      value     : value,
-      exactmatch: newval
-    };
-  }
-  return {};
-}
-
-function readFile(f)
-{
-  // accepts file object or file path
-  var
-    Stream = null,
-    str;
-
-  if ( typeof f == 'string' )
-  {
-    f = SHARED_DIR.resolve(f);
-  }
-
-  if ( f && f.exists )
-  {
-    Stream = f.open(f, opera.io.filemode.READ)
-    str = Stream.read( Stream.bytesAvailable );
-    Stream.close();
-    return str;
-  }
-  return null;
-}
-
-function writeFile(path, content, can_overwrite)
-{
-  var File = null;
-
-  if ( path && content && (File=SHARED_DIR.resolve(path)) )
-  {
-    if (File.exists && !can_overwrite)
-      return false;
-
-    var stream = SHARED_DIR.open(path, opera.io.filemode.WRITE);
-    stream.write(content);
-    stream.close();
-    return File;
-  }
-  return false;
-}
-
-function createFile(path, content, overwrite)
-{
-  return writeFile(path, content, overwrite);
-}
-
-function deleteFile(filename)
-{
-  var File = null;
-
-  if ( filename && (File=SHARED_DIR.resolve(filename))
-       && File.exists && File.isFile )
-  {
-    return SHARED_DIR.deleteFile(File);
-  }
-  return false;
-}
-
-/**
-  * downloads file using synchronous XHR
-  */
-function downloadScript(uri)
-{
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', uri, false);
-  xhr.setRequestHeader('Cache-Control', 'no-cache');
-  try
-  {
-    xhr.send();
-  }
-  catch(e)
-  {
-    // will throw for local files for example
-    return false;
-  }
-
-  // little validation to make sure it's javascript
-  if ( xhr.getResponseHeader('Content-type').indexOf('javascript') == -1 )
-    return false;
-
-  if ( !xhr.responseText )
-    return false;
-
-  // extract file name from path
-  var filename = uri.match(/.+\/([^/?]+)/);
-  if ( filename )
-    filename = filename[1];
-  else
-    return false;
-
-  // create user script file
-  return createFile(filename, xhr.responseText);
-}
-
-function savePref(key, val)
-{
-  return widget.setPreferenceForKey(encodeURIComponent(val), key);
-}
-
-function getPref(name)
-{
-  return decodeURIComponent(widget.preferenceForKey(name))||null;
-}
-
-/**
-  * update checking
-  */
-var updater = new function()
+var Updater = new function()
 {
   var latest_ver = getPref('latestVer');
   var last_check = getPref('lastCheck');
@@ -715,6 +617,9 @@ var updater = new function()
   }
 }
 
+/**
+  * Utility functions
+  */
 function getPropOfArrayItem(prop, arr)
 {
   for (var i=0; i<arr.length; i++)
@@ -728,4 +633,149 @@ function getPropOfArrayItem(prop, arr)
 function trim(str)
 {
   return str.replace(/^[\s\-]+|\s+$/, '');
+}
+
+function savePref(key, val)
+{
+  return widget.setPreferenceForKey(encodeURIComponent(val), key);
+}
+
+function getPref(name)
+{
+  return decodeURIComponent(widget.preferenceForKey(name))||null;
+}
+
+/**
+  * Webserver functions
+  */
+var PublicFiles = new function()
+{
+  var files = [];
+
+  this.share = function()
+  {
+    var public_dir = PUBLIC_DIR.resolve('/public_html/');
+    public_dir.refresh();
+
+    for ( var i=0,file; file=public_dir[i]; i++ )
+    {
+      if ( file.isFile )
+      {
+        var path = file.path, match = null;
+        if ( match = file.path.match(/(\/[^\/]+)$/) )
+        {
+          path = match[1];
+        }
+        files.push( path );
+      }
+    }
+  }
+
+  this.isPublic = function(uri)
+  {
+    for ( var i=0; i<files.length; i++ )
+    {
+      var item = files[i];
+      if ( uri.indexOf(item)>-1 )
+        return true;
+    }
+    return false;
+  }
+}
+PublicFiles.share();
+
+
+/**
+  * File IO functions
+  */
+function readFile(f)
+{
+  // accepts file object or file path
+  var
+    Stream = null,
+    str;
+
+  if ( typeof f == 'string' )
+  {
+    f = SHARED_DIR.resolve(f);
+  }
+
+  if ( f && f.exists )
+  {
+    Stream = f.open(f, opera.io.filemode.READ)
+    str = Stream.read( Stream.bytesAvailable );
+    Stream.close();
+    return str;
+  }
+  return null;
+}
+
+function writeFile(path, content, can_overwrite)
+{
+  var File = null;
+
+  if ( path && content && (File=SHARED_DIR.resolve(path)) )
+  {
+    if (File.exists && !can_overwrite)
+      return false;
+
+    var stream = SHARED_DIR.open(path, opera.io.filemode.WRITE);
+    stream.write(content);
+    stream.close();
+    return File;
+  }
+  return false;
+}
+
+function createFile(path, content, overwrite)
+{
+  return writeFile(path, content, overwrite);
+}
+
+function deleteFile(filename)
+{
+  var File = null;
+
+  if ( filename && (File=SHARED_DIR.resolve(filename))
+       && File.exists && File.isFile )
+  {
+    return SHARED_DIR.deleteFile(File);
+  }
+  return false;
+}
+
+/**
+  * Downloads file using synchronous XHR
+  */
+function downloadScript(uri)
+{
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', uri, false);
+  xhr.setRequestHeader('Cache-Control', 'no-cache');
+  try
+  {
+    xhr.send();
+  }
+  catch(e)
+  {
+    // will throw for local files for example
+    return false;
+  }
+
+  // little validation to make sure it's javascript
+  if ( xhr.getResponseHeader('Content-type').indexOf('javascript') == -1 )
+    return false;
+
+  if ( !xhr.responseText )
+    return false;
+
+  // extract file name from path
+  var filename = uri.match(/.+\/([^/?]+)/);
+  if ( filename )
+    filename = filename[1];
+  else
+    return false;
+
+  // create user script file
+  return createFile(filename, xhr.responseText);
 }
