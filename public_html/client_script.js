@@ -86,7 +86,7 @@ $(document).ready(function() {
   }
 
   // set up periodical check for changes in directory (every 10 minutes)
-  window.interval = setInterval(ScriptsList.checkIfModified, 1000*60*10);
+  window.interval = setInterval(ScriptsList.checkIfModified, 1000*60*5);
 
 });
 

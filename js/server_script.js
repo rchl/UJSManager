@@ -81,7 +81,7 @@ function handleRequest( event )
         return;
       }
 
-      var template = new Markuper( 'templates/dialog.html', tpldata );
+      var template = new Markuper( 'templates/install.html', tpldata );
       response.write( template.parse().html() );
       response.close();
       return;

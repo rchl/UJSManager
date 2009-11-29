@@ -6,20 +6,24 @@
 // @uniqueid    {{unique_id}}
 // ==/UserScript==
 
-window.addEventListener(
-  'load',
+document.addEventListener(
+  'DOMContentLoaded',
   function()
   {
+    // we want to be faster then some other user scripts to prevent conflicts
+    // that's why we have to run before load event
+
     // try to detect user scripts by pre tag alone
     if ( !(document && document.querySelector('body > pre:only-child')
-        && location.href.match(/\.js($|\?)/))  // matches .js files (also with query)
-      )
+         && location.href.match(/\.js($|\?)/)) )  // matches .js files (also with query)
       return;
 
     var badge = document.createElement('div');
     badge.setAttribute('style', 'background:#ffffe1; color:#000; border:1px solid #c0c0c0;' +
         'padding:5px; font-family:Verdana,sans-serif; font-size:12px;');
 
+    // save script text now, later it might be modified by other user scripts
+    var script_text = document.getElementsByTagName('pre')[0].innerHTML;
 
     badge.show = function()
     {
@@ -87,8 +91,7 @@ window.addEventListener(
       form.action = service_uri;
       form.method = 'post';
       form.enctype = 'multipart/form-data';
-      form.innerHTML = '<textarea name="script_body">' +
-                       document.getElementsByTagName('pre')[0].textContent + '</textarea>' +
+      form.innerHTML = '<textarea name="script_body">' + script_text + '</textarea>' +
                        '<input type="text" name="install_script" value="' + location.href + '">' +
                        '<input type="text" name="unique_id" value="' + unique_id +'">';
       form.submit();
