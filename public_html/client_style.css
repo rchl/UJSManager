@@ -116,17 +116,17 @@ button img {
   margin: .5em;
 }
 
-#toolbar_container .button {
+.button {
   display: inline-block;
   position: relative;
   opacity: .7;
   background: -o-skin("Dialog Page Skin");
   padding: 1px 4px 3px 4px;
-  margin: 0 0 0 -4px;
+  margin: 0 8px 0 -4px;
   cursor: pointer;
 }
 
-#toolbar_container .menu {
+.button ul {
   display: none;
   position: absolute;
   background: -o-skin("Dialog Page Skin");
@@ -134,23 +134,35 @@ button img {
   left: 0;
   padding: 3px 4px 5px 4px;
   z-index: 1;
-  width: 100%;
+  box-sizing: border-box;
 }
 
-#toolbar_container .button:hover .menu {
+.button:hover ul {
   display: block;
 }
 
-#toolbar_container .menu li a {
+.button ul li {
+  overflow: visible;
+}
+
+.button ul li a {
   cursor: pointer;
   display: block;
   color: #000;
   padding: 2px 3px;
 }
 
-#toolbar_container .menu li a:hover {
+.button ul li a:hover {
   background: -o-skin("Cycler Page Button Skin.hover");
   color: navy;
+}
+
+#changes {
+  display: none;
+  padding: .5em;
+  margin: .5em;
+  cursor: pointer;
+  background: -o-skin("Dialog Page Skin");
 }
 
 #scripts_list  {
@@ -187,12 +199,12 @@ button img {
   content: -o-skin("Trash");
 }
 
-#scripts_list .toggle img.disabled {
-  content: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8%2F9hAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1%2B%2FAAAABV0RVh0Q3JlYXRpb24gVGltZQAyOS82LzA55Xg1zgAAABx0RVh0U29mdHdhcmUAQWRvYmUgRmlyZXdvcmtzIENTNAay06AAAAGASURBVDiNpZPLK0RRHMc%2Fxz3FxmNBSEosBkVXSpQyFqRYTB4Lq2ujbCby%2FAuUZDESCyuWUwwp2ciwF3cjbMjWCoW45xoLznXnwcL86tSv7%2B%2F7e%2F%2BOSCQSZCM5WXkDUitCCA%2Bc3c0dAcYB8xuygeXF0NuG5ujKhacIwexubhEQ9zmmig10LobeHrSf9FuVMv5y5tsWB5o04M0gHC2wHFeajivJ9KzWKHVlIRxXmuFogZU2A6WMid%2FSdgbGaKzoI08WcXZ3ADABbCZVoFxpKleiXElNcQdaLy806W2Y4%2BX9kdX4iMa9Nr0AjjJwlEFL1TBT3TsMNc%2FjKAOrbQUQLBwM8PT67PEytCBtwDy5ihEobaerfhSzsoeS%2FErWTya5vb%2F20%2B30AK4RATYA1o5m%2BEgIOgKDbJ1GiF%2FGgJ%2BsQEQrSXcwsFJ9jm%2BNwdp%2Bjq9iqTO1t8M3TZnvwJVB4FgHObzYS6XYQNAPJFWgpXepzuJrVf5TjuxPX25qTtop%2F1ey%2Fo2ftG6clPyKKlYAAAAASUVORK5CYII%3D");
-}
-
 #scripts_list .toggle img {
   content: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8%2F9hAAAABGdBTUEAALGPC%2FxhBQAAAAlwSFlzAAALEAAACxABrSO9dQAAABl0RVh0U29mdHdhcmUAUGFpbnQuTkVUIHYzLjUuMU7nOPkAAADXSURBVDhPzZJdCoQwDIR99UY9W44hmCKIiCAFb%2BTPGRT0AG4m2EVspU8LW%2FhgmkyGQpNlf3mGYTACCXwBbZKPFVP%2BGPQB96D8Ncg5RwInoGhA3%2FdGYHCeJx%2FHoRpAo%2Bbv8AYhXdeRwGDfdx1YlkWBRs334Q0C2rblO%2FM86yCAfvaDgKZp%2BM40Td8A6Gc%2FCKjrmgQG27bp8DiOCjRqvg9vEFBVlREYYGBdV9UAGjV%2Fhzf6E9ZaEjhB%2FBuRWJZlLpDAL6D3vkj%2BWUVRGIEEvoBOr3Jy139h%2BABGiUOSPP25xQAAAABJRU5ErkJggg%3D%3D");
+}
+
+#scripts_list .toggle img.disabled {
+  content: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8%2F9hAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1%2B%2FAAAABV0RVh0Q3JlYXRpb24gVGltZQAyOS82LzA55Xg1zgAAABx0RVh0U29mdHdhcmUAQWRvYmUgRmlyZXdvcmtzIENTNAay06AAAAGASURBVDiNpZPLK0RRHMc%2Fxz3FxmNBSEosBkVXSpQyFqRYTB4Lq2ujbCby%2FAuUZDESCyuWUwwp2ciwF3cjbMjWCoW45xoLznXnwcL86tSv7%2B%2F7e%2F%2BOSCQSZCM5WXkDUitCCA%2Bc3c0dAcYB8xuygeXF0NuG5ujKhacIwexubhEQ9zmmig10LobeHrSf9FuVMv5y5tsWB5o04M0gHC2wHFeajivJ9KzWKHVlIRxXmuFogZU2A6WMid%2FSdgbGaKzoI08WcXZ3ADABbCZVoFxpKleiXElNcQdaLy806W2Y4%2BX9kdX4iMa9Nr0AjjJwlEFL1TBT3TsMNc%2FjKAOrbQUQLBwM8PT67PEytCBtwDy5ihEobaerfhSzsoeS%2FErWTya5vb%2F20%2B30AK4RATYA1o5m%2BEgIOgKDbJ1GiF%2FGgJ%2BsQEQrSXcwsFJ9jm%2BNwdp%2Bjq9iqTO1t8M3TZnvwJVB4FgHObzYS6XYQNAPJFWgpXepzuJrVf5TjuxPX25qTtop%2F1ey%2Fo2ftG6clPyKKlYAAAAASUVORK5CYII%3D");
 }
 
 #scripts_list .folder {
@@ -204,9 +216,12 @@ button img {
   content: -o-skin("Folder");
 }
 
+#scripts_list .icons_container {
+ position: absolute;
+ right: 3px;
+}
+
 #scripts_list .edit {
-  position: absolute;
-  right: 3px;
   opacity: .8;
 }
 
@@ -218,8 +233,18 @@ button img {
   content: -o-skin("Menu Widgets");
 }
 
-#scripts_list .edittxt img {
-  content: -o-skin("Menu Edit");
+#scripts_list .shareicon {
+  display: none;
+  background: -o-skin("Dialog Page Skin");
+  padding: 5px 1px 0px 1px;
+}
+
+#scripts_list .shareicon img {
+  content: url(share.png);
+}
+
+#scripts_list .shared .shareicon {
+  display: inline;
 }
 
 .script_infobox {
@@ -238,6 +263,14 @@ button img {
 .script_infobox p b {
   display: inline-block;
   min-width: 5em;
+}
+
+#scripts_list .edittxt img {
+  content: -o-skin("Menu Edit");
+}
+
+#scripts_list .share img {
+  content: url(share.png);
 }
 
 #settings_dialog {

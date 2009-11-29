@@ -13,27 +13,39 @@
     <button id="close_notifier" title="Do not bother me for next 3 days"></button>
     <span id="msg"><a href="http://unite.opera.com/application/401/"
     target="_blank">UJS Manager update available!</a></span></div>
+
   <div id="main_container">
     <button id="create_script" class="reset" title="Create new script file"><img alt="new script">NEW</button>
     <div id="quickfind_container">
       <input type="text" id="quickfind" value="Quick find">
     </div>
     <div id="toolbar_container">
-      <a href="http://my.opera.com/community/forums/forum.dml?id=120"
-        target="_blank" style="float: right; text-decoration: underline;">Get User Scripts</a>
-      <div id="sortorder" class="button">Sort by: {{sorting}}
-        <ul class="menu">
-          <li><a href="?sorting=name">name</a></li>
-          <li><a href="?sorting=status">enabled status</a></li>
+      <!--<a href="http://my.opera.com/community/forums/forum.dml?id=120"
+        target="_blank" style="float: right; text-decoration: underline;">Get User Scripts</a>-->
+      <div class="button">Sort by: {{sorting}}
+        <ul>
+          <li><a href="?sorting=name">Sort by name</a></li>
+          <li><a href="?sorting=status" title="Sorts by enabled/disabled status">Sort by status</a></li>
         </ul>
       </div>
-      <div onclick="location.reload();" id="changes" style="display:none">Detected changes. Click to see them.</div>
+      <div class="button">Display: {{display}}
+        <ul>
+          <li><a href="?display=name" title="Displays name extracted from script header (if available)">Display name</a></li>
+          <li><a href="?display=filename">Display filename</a></li>
+        </ul>
+      </div>
     </div>
+    <div onclick="location.reload();" id="changes">Detected changes in directory. Click to reload.</div>
     <ul id="scripts_list">
       <li data-list="scripts">
-        <form name="{{scripts[].filename}}">
-          <button type="button" class="edit reset" data-keep-if="scripts[].hassettings"
-            title="Edit script settings" handler="loadSettings"><img alt="Settings"></button>
+        <form name="{{scripts[].filepath}}" handler="toggleItem" class="{{scripts[].isshared}}">
+          <input type="hidden" name="prettyname" value="{{scripts[].prettyname}}">
+          <div class="icons_container">
+            <a href="{{service_path}}" class="shareicon" target="_blank"
+              title="This script is shared with other people"><img alt="sharing"></a>
+            <button type="button" class="edit reset" data-keep-if="scripts[].hassettings"
+              title="Edit script settings" handler="loadSettings"><img alt="Settings"></button>
+          </div>
           <div data-keep-if="scripts[].isdirectory" handler="toggleItem">
             <button type="button" class="folder reset" handler="changeDirectory"><img alt="Dir">
               <span class="name">{{scripts[].prettyname}}</span></button>
@@ -42,7 +54,7 @@
             <button type="button" name="check" class="toggle reset" handler="toggleScript"
               title="Click to toggle"><img class="disabled" data-keep-if="scripts[].isenabled" alt="on"><img
               data-remove-if="scripts[].isenabled" alt="off"></button>
-            <span class="name" title="{{scripts[].prettyname}}" handler="toggleItem">{{scripts[].prettyname}}</span>
+            <span class="name" title="{{scripts[].printname}}" handler="toggleItem">{{scripts[].prettyname}}</span>
             <div class="desc">
               <div class="script_infobox" data-keep-if="scripts[].header">
                 <p data-list="scripts[].header">
@@ -51,10 +63,12 @@
                 </p>
               </div>
               <div>
-                <button type="button" class="delete" title="Delete" handler="deleteScript"><img alt="delete"></button>
-                <button type="button" class="toggle" handler="toggleScript"><img class="disabled"
-                  data-keep-if="scripts[].isenabled"><img data-remove-if="scripts[].isenabled">Toggle</button>
+                <button type="button" class="delete" handler="deleteScript" title="Delete"><img alt="delete"></button>
+                <!--<button type="button" class="toggle" handler="toggleScript"><img class="disabled"
+                  data-keep-if="scripts[].isenabled"><img data-remove-if="scripts[].isenabled">Toggle</button>-->
                 <button type="button" class="edittxt" handler="editScriptText"><img>Edit</button>
+                <button type="button" class="share" handler="shareScript" data-remove-if="scripts[].isdirectory"
+                  title="Enable sharing of this script with other people"><img>Un/Share</button>
               </div>
             </div>
           </div>
@@ -65,6 +79,7 @@
       UJS Manager v{{version}} by <a href="http://my.opera.com/d.i.z./" target="_blank">Rafał Chłodnicki</a>
     </div>
   </div>
+
   <div id="settings_dialog">
     <div id="settings_header">
       <button id="close_settings" class="reset" title="Close script settings"><img alt="Close"></button>
@@ -74,6 +89,7 @@
       <div id="settings"></div>
     </div>
   </div>
+
   <div id="edit_dialog">
     <div id="edit_header">
       <button id="close_edit" class="reset" title="Close edit dialog"><img alt="Close"></button>

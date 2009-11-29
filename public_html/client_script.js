@@ -21,6 +21,9 @@ document.addEventListener('click', function(e)
     case 'toggleItem':
       ScriptsList.toggleItem.call(_this, e);
       break;
+    case 'shareScript':
+      ScriptsList.shareScript.call(_this, e);
+      break;
     case 'loadSettings':
       ScriptsList.loadSettings.call(_this, e);
       break;
@@ -101,18 +104,18 @@ var ScriptsList = new function()
 
   this.toggleItem = function(ev)
   {
-    var clicked = ev.target;
+    var item = $('div.desc', this.parentNode);
+    if (!item.length) return;
 
-    var item = $('div.desc', this.parentNode).get(0);
+    item = item[0];
 
-    // roll up previously open element
+    // roll up previously open item
     if (last_item && item != last_item)
       $(last_item).slideUp('normal');
 
-    last_item = item;
-
-    // toggle clicked option
+    // toggle clicked item
     $(item).slideToggle('normal');
+    last_item = item;
   }
 
   this.toggleScript = function(ev)
@@ -125,11 +128,25 @@ var ScriptsList = new function()
       function(data)
       {
         if (!data.error)
-          form.name = data.result;
+          form.name = data.script.filepath;
         else
           alert(data.error);
 
         $('button.toggle img', form).attr( { class: ( data.enabled ? 'disabled' : '' ), disabled: false } );
+      }, 'json');
+  }
+
+  this.shareScript = function(ev)
+  {
+    var form = ev.target.form;
+
+    $.post('', { action: 'toggleshare', filename: form.name },
+      function(data)
+      {
+        if (!data.error)
+          form.className = (data.shared ? 'shared' : '');
+        else
+          alert(data.error);
       }, 'json');
   }
 
@@ -318,6 +335,7 @@ var ScriptSettings = new function()
   this.open = function(filename, options)
   {
     currently_editing = filename;
+    filename = filename.replace(/^.+\//, '');
 
     if (!settings_el)
     {
@@ -471,9 +489,12 @@ var EditDialog = new function()
     if (element)
     {
       _self.related_element = element;
-      edit_filename.value = element.name;
+      edit_filename.value = element.getAttribute('name');
       filename_el.hide();
-      edit_title.text(unescape(element.getAttribute('name')));
+      if (element.prettyname)
+        edit_title.text(element.prettyname.value);
+      else
+        edit_title.text(element.getAttribute('name'));
       new_script = false;
     }
     else
@@ -556,9 +577,9 @@ var EditDialog = new function()
             alert(resp.error);
           else
           {
-            if (resp.new_script)
+            if (resp.script)
             {
-              var s = $(resp.new_script);
+              var s = $(resp.script);
               s[0].style.opacity = 0;
               $('#scripts_list').append(s);
               s[0].scrollIntoView();
