@@ -10,7 +10,7 @@ var
   APP_DIR = opera.io.filesystem.mountSystemDirectory('application'),
   SERVICE_DOAP = 'http://unite.opera.com/service/doap/401/',
   /* DON'T FORGET TO UPDATE VERSION FOR EVERY RELEASE !!! */
-  SERVICE_VERSION = '2.1',
+  SERVICE_VERSION = '2.2',
   SERVICE_PATH = 'http://' + opera.io.webserver.hostName + opera.io.webserver.currentServicePath,
   SERVICE_PATH_ADMIN = 'http://admin.' + opera.io.webserver.hostName + opera.io.webserver.currentServicePath,
   DATA;
@@ -52,7 +52,7 @@ function handleRequest( event )
       var tpldata = {
         admin_url     : SERVICE_PATH_ADMIN,
         install_url   : request.bodyItems['install_script'][0],
-        script_body   : request.bodyItems['script_body'][0],
+        script_body   : document.createTextNode(request.bodyItems['script_body'][0]),
         unique_id     : request.bodyItems['unique_id'][0],
         ask_overwrite : false,
         old_header    : null,
@@ -70,7 +70,7 @@ function handleRequest( event )
         {
           tpldata.ask_overwrite = true;
           tpldata.old_header = Script.parseHeader(existing_body)||{'<missing>':''};
-          tpldata.new_header = Script.parseHeader(tpldata.script_body)||{'<missing>':''};
+          tpldata.new_header = Script.parseHeader(tpldata.script_body.data)||{'<missing>':''};
 
         }
       }
@@ -156,6 +156,13 @@ function handleRequest( event )
   {
     savePref('display', request.queryItems['display'][0]);
   }
+  if (request.queryItems['alt_icon'])
+  {
+    savePref( 'alt_icon', getPref('alt_icon') ? '' : '_red' );
+    response.setStatusCode('303');
+    response.setResponseHeader('Location', SERVICE_PATH_ADMIN);
+    response.close();
+  }
 
   var dir_query = null;
 
@@ -168,6 +175,7 @@ function handleRequest( event )
     scripts     : ScriptsDirectory.getAllUserScripts(dir_query),
     sorting     : getPref('sorting')||'name',
     display     : getPref('display')||'name',
+    alt_icon    : getPref('alt_icon')||'',
     version     : SERVICE_VERSION,
     newversion  : Updater.checkUpdate(),
     service_path: SERVICE_PATH
@@ -771,21 +779,25 @@ var PublicFiles = new function()
 {
   var files = [];
 
-  this.share = function()
+  this.share = function(path)
   {
-    var public_dir = APP_DIR.resolve('/public_html/');
-    public_dir.refresh();
+    var dir = APP_DIR.resolve(path);
+    dir.refresh();
 
-    for ( var i=0,file; file=public_dir[i]; i++ )
+    for ( var i=0,File; File=dir[i]; i++ )
     {
-      if ( file.isFile )
+      if ( File.isFile )
       {
-        var path = file.path, match = null;
-        if ( match = file.path.match(/(\/[^\/]+)$/) )
+        var path = File.path, match = null;
+        if ( match = File.path.match(/(\/[^\/]+)$/) )
         {
           path = match[1];
         }
         files.push( path );
+      }
+      else
+      {
+        PublicFiles.share(File.path);
       }
     }
   }
@@ -801,4 +813,4 @@ var PublicFiles = new function()
     return false;
   }
 }
-PublicFiles.share();
+PublicFiles.share('/public_html/');
