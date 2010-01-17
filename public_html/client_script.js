@@ -279,12 +279,6 @@ var ScriptSettings = new function()
         ul.appendChild(li);
         break;
       case 'int':
-        el = document.createElement('button');
-        el.className = 'setting_elem';
-        el.type = 'number';
-        el.value = op.value;
-        el.textContent = op.value;
-        break;
       case 'string':
       case 'regexp':
         el = document.createElement('span');
