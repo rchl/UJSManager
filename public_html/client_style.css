@@ -75,11 +75,10 @@ button img {
 }
 
 #create_script {
-  background: -o-skin("Push Button Skin");
   position: absolute;
   right: 0;
   margin: .4em .3em .3em .3em;
-  padding: 3px 4px 0 0;
+  padding: 0 2px 0 0;
   font-size: 14px;
   cursor: pointer;
   opacity: .8;
@@ -87,13 +86,12 @@ button img {
 }
 
 #create_script:hover {
-  background: -o-skin("Push Default Button Skin.pressed");
   opacity: 1;
 }
 
 #create_script img {
   display: inline-block;
-  vertical-align: middle;
+  vertical-align: bottom;
   margin: -3px 0;
   content: -o-skin("Add/Remove Panels");
 }
@@ -109,6 +107,7 @@ button img {
   background: #fff url("search_default.png") no-repeat 2px 2px;
   border: 1px solid #777;
   box-sizing: border-box;
+  border-radius: 5px;
 }
 
 #toolbar_container {
@@ -119,30 +118,28 @@ button img {
 .button {
   display: inline-block;
   position: relative;
-  opacity: .7;
-  background: -o-skin("Dialog Page Skin");
-  padding: 1px 4px 3px 4px;
-  margin: 0 8px 0 -4px;
+  background: #eee;
+  padding: 1px 2px 1px 2px;
   cursor: pointer;
+  border: 1px solid #fff;
+  border-radius: 5px;
+  box-shadow: 0px 1px 2px #aaa;
 }
 
 .button ul {
   display: none;
   position: absolute;
-  background: -o-skin("Dialog Page Skin");
-  top: 0;
-  left: 0;
-  padding: 3px 4px 5px 4px;
-  z-index: 1;
-  box-sizing: border-box;
+  top: -1px;
+  left: -1px;
+  background: #fff;
+  border: 1px solid #fff;
+  box-shadow: 0 0px 2px #000;
+  border-radius: 3px;
 }
 
-.button:hover ul {
-  display: block;
-}
-
-.button ul li {
+.button li {
   overflow: visible;
+  white-space: nowrap;
 }
 
 .button ul li a {
@@ -153,8 +150,12 @@ button img {
 }
 
 .button ul li a:hover {
-  background: -o-skin("Cycler Page Button Skin.hover");
   color: navy;
+  text-decoration: underline;
+}
+
+.button:hover ul {
+  display: block;
 }
 
 #changes {
@@ -168,7 +169,9 @@ button img {
 #scripts_list  {
   padding: 1em;
   margin: .5em;
-  background: -o-skin("Dialog Page Skin");
+  background-color: #fff;
+  border-radius: 5px;
+  box-shadow: 0px 0px 2px #555;
 }
 
 #scripts_list form {
@@ -182,7 +185,9 @@ button img {
 #scripts_list form:hover
 {
   color: #00a;
-  background: -o-skin("Cycler Page Button Skin.hover");
+  padding: 2px;
+  border: 1px solid #aaa;
+  border-radius: 5px;
 }
 
 #scripts_list .desc {
@@ -196,7 +201,7 @@ button img {
 }
 
 #scripts_list .delete img {
-  content: -o-skin("Trash");
+  content: -o-skin("Mail Trash");
 }
 
 #scripts_list .toggle img {
@@ -306,7 +311,10 @@ button img {
 #settings_container {
   padding: 1em;
   box-sizing: border-box;
-  background: -o-skin("Dialog Page Skin");
+  background: #fff;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+  border: 1px solid #555;
 }
 
 #settings {
@@ -365,7 +373,10 @@ button img {
 
 #edit_form_content {
   padding: 1em;
-  background: -o-skin("Dialog Page Skin");
+  background: #fff;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+  border: 1px solid #555;
   text-align: left;
 }
 
