@@ -28,8 +28,9 @@ function trim(str)
   return str.replace(/^[\s\-]+|\s+$/, '');
 }
 
-function savePref(key, val)
+function setPref(key, val)
 {
+  if (val === undefined) return;
   return widget.setPreferenceForKey(escape(val), key);
 }
 

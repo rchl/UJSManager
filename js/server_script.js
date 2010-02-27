@@ -10,7 +10,7 @@ var
   APP_DIR = opera.io.filesystem.mountSystemDirectory('application'),
   SERVICE_DOAP = 'http://unite.opera.com/service/doap/401/',
   /* DON'T FORGET TO UPDATE VERSION FOR EVERY RELEASE !!! */
-  SERVICE_VERSION = '2.3',
+  SERVICE_VERSION = '2.4',
   SERVICE_PATH = 'http://' + opera.io.webserver.hostName + opera.io.webserver.currentServicePath,
   SERVICE_PATH_ADMIN = 'http://admin.' + opera.io.webserver.hostName + opera.io.webserver.currentServicePath,
   DATA;
@@ -149,16 +149,16 @@ function handleRequest( event )
   // set sorting pref
   if ( request.queryItems['sorting'] )
   {
-    savePref('sorting', request.queryItems['sorting'][0]);
+    setPref('sorting', request.queryItems['sorting'][0]);
   }
   // set display pref
   if ( request.queryItems['display'] )
   {
-    savePref('display', request.queryItems['display'][0]);
+    setPref('display', request.queryItems['display'][0]);
   }
   if (request.queryItems['alt_icon'])
   {
-    savePref( 'alt_icon', getPref('alt_icon') ? '' : '_red' );
+    setPref( 'alt_icon', getPref('alt_icon') ? '' : '_red' );
     response.setStatusCode('303');
     response.setResponseHeader('Location', SERVICE_PATH_ADMIN);
     response.close();
@@ -494,7 +494,7 @@ var ScriptsDirectory = new function()
         var unique_id = Math.random();
         scr_installer.filecontent = scr_installer.filecontent.replace(
           /\{\{unique_id\}\}/g, unique_id);
-        savePref('unique_id', unique_id);
+        setPref('unique_id', unique_id);
 
         // if script exists, it might have been disabled so we have to use filename with .xx
         var filename = ujs_installer ? ujs_installer.filename : 'ujs_manager_installer.js';
@@ -646,7 +646,7 @@ var ScriptsDirectory = new function()
       shared_scripts.push(filename);
     }
 
-    savePref('shared_scripts', shared_scripts.join('|'));
+    setPref('shared_scripts', shared_scripts.join('|'));
     return { shared: shared_scripts.include(filename) };
   }
 
@@ -705,7 +705,7 @@ var Updater = new function()
   {
     // if there is saved pref with higher version then
     // don't check. we know about new version already
-    if ( latest_ver && latest_ver > SERVICE_VERSION )
+    if ( parseFloat(latest_ver) > SERVICE_VERSION )
     {
       return true;
     }
@@ -721,7 +721,7 @@ var Updater = new function()
     }
 
     // update last check data
-    savePref('lastCheck', cur_date);
+    setPref('lastCheck', cur_date);
 
     var req = new XMLHttpRequest();
     req.onreadystatechange = function()
@@ -747,14 +747,14 @@ var Updater = new function()
         if ( remoteVersion = doap.selectSingleNode('//rdf:RDF/doap:Project/doap:release/doap:Version/doap:revision', nsresolve) )
         {
           remoteVersion = remoteVersion.text;
-          if ( latest_ver && parseFloat(remoteVersion) > latest_ver )
+          if ( latest_ver && parseFloat(remoteVersion) > parseFloat(latest_ver) )
           {
-            savePref('latestVer', remoteVersion);
+            setPref('latestVer', remoteVersion);
             return true;
           }
           else
           {
-            savePref('latestVer', remoteVersion);
+            setPref('latestVer', remoteVersion);
           }
         }
         return false;
@@ -767,8 +767,8 @@ var Updater = new function()
 
   this.remindMeLater = function()
   {
-    savePref('latestVer', latest_ver=SERVICE_VERSION);
-    savePref('lastCheck', last_check=new Date().getTime());
+    setPref('latestVer', latest_ver=SERVICE_VERSION);
+    setPref('lastCheck', last_check=new Date().getTime());
   }
 }
 
