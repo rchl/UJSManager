@@ -564,7 +564,7 @@ var EditDialog = new function()
       {
         ifr.onload = function()
         {
-          var resp = eval('('+ifr.contentDocument.documentElement.text+')');
+          var resp = eval('('+ifr.contentDocument.documentElement.textContent+')');
           if (!resp)
             alert('Saving failed due to unknown problem');
           else if (resp.error)

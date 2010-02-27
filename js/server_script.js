@@ -746,7 +746,7 @@ var Updater = new function()
         // compare with current version
         if ( remoteVersion = doap.selectSingleNode('//rdf:RDF/doap:Project/doap:release/doap:Version/doap:revision', nsresolve) )
         {
-          remoteVersion = remoteVersion.text;
+          remoteVersion = remoteVersion.textContent;
           if ( latest_ver && parseFloat(remoteVersion) > parseFloat(latest_ver) )
           {
             setPref('latestVer', remoteVersion);
