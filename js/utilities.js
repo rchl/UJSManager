@@ -31,12 +31,19 @@ function trim(str)
 function setPref(key, val)
 {
   if (val === undefined) return;
-  return widget.setPreferenceForKey(escape(val), key);
+
+  if (window.localStorage)
+    return localStorage[key] = escape(val);
+  else
+    return widget.setPreferenceForKey(escape(val), key);
 }
 
-function getPref(name)
+function getPref(key)
 {
-  return unescape(widget.preferenceForKey(name))||'';
+  if (window.localStorage)
+    return unescape(localStorage[key]||'');
+  else
+    return unescape(widget.preferenceForKey(key)||'');
 }
 
 /**

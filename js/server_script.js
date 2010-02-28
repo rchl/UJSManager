@@ -37,7 +37,7 @@ function handleRequest( event )
   // and remote users can't connect to it anyway.
   if ( request.bodyItems['install_script'] )
   {
-    // show error if not corect id given
+    // show error if incorect id given
     if ( !request.bodyItems['unique_id']
          || request.bodyItems['unique_id'][0] != getPref('unique_id') )
     {
@@ -97,6 +97,9 @@ function handleRequest( event )
       // we are pretty sure that regexp above will match as it did in install dialog already
       filename = filename[1];
 
+      // save download url for future use
+      saveScriptDownloadURL(filename, script_uri);
+
       // install file if there is none already
       widget.showNotification(
         createFile(filename, script_body, overwrite) ?
@@ -112,6 +115,7 @@ function handleRequest( event )
     }
   }
 
+  // serve shared file
   var File;
   if ( request.queryItems['getshared'] && (File = ScriptsDirectory.isShared(request.queryItems['getshared'][0])) )
   {
@@ -121,6 +125,7 @@ function handleRequest( event )
     return;
   }
 
+  // show public page
   if ( !isOwner )
   {
     var tpldata = {
@@ -814,3 +819,16 @@ var PublicFiles = new function()
   }
 }
 PublicFiles.share('/public_html/');
+
+function saveScriptDownloadURL(filename, url)
+{
+  if (!window.localStorage || !filename || !url)
+    return false;
+
+  var urls = localStorage.download_urls||"{}";
+  urls = JSON.parse(urls);
+  urls[filename] = url;
+  localStorage.download_urls = JSON.stringify(urls);
+
+  return true;
+}
