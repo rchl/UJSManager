@@ -85,7 +85,7 @@ $(document).ready(function() {
       break;
   }
 
-  // set up periodical check for changes in directory (every 10 minutes)
+  // set up periodical check for changes in directory (every 5 minutes)
   window.interval = setInterval(ScriptsList.checkIfModified, 1000*60*5);
 
 });
@@ -275,8 +275,6 @@ var ScriptSettings = new function()
         el.checked = ( op.value=='true' ? true : false );
         el.addEventListener('change', ScriptSettings.changeSetting, false);
         // argh, hack for bool - append before text
-        li.appendChild(el);
-        ul.appendChild(li);
         break;
       case 'int':
       case 'string':
@@ -309,19 +307,12 @@ var ScriptSettings = new function()
       ul.className = 'indent'+indent_lev[0].length;
     }
 
-    li = document.createElement('li');
     var label = document.createElement('label');
-    label.textContent = op.name;
+    label.appendChild(el);
+    label.appendChild( document.createTextNode(' ' + op.name) );
     label.title = op.name;
-    label.setAttribute('for', 'el'+index);
     li.appendChild(label);
     ul.appendChild(li);
-
-    if ( ul.childNodes.length<2 )
-    {
-      li.appendChild(el);
-      ul.appendChild(li);
-    }
 
     return cont.appendChild(ul);
   }
@@ -558,7 +549,8 @@ var EditDialog = new function()
           (new_script?'':'<input type="hidden" name="can_overwrite" value="true">')+
         '</form>'
       )[0];
-      form.data.value = edit_field.value;
+      // encode script text, otherwise it can be trimmed when having some non-ascii characters
+      form.data.value = escape(edit_field.value);
       form.filename.value = edit_filename.value;
       ifr.onload = function()
       {

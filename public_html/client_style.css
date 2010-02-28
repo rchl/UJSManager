@@ -332,13 +332,14 @@ button img {
 #settings ul.indent2 { padding-left: 2em; }
 #settings ul.indent3 { padding-left: 3em; }
 
-#settings input[type="text"] {
-  width: 95%;
-}
-
 #settings li {
   display: inline-block;
   margin: 0 1px;
+  white-space: normal;
+}
+
+#settings input[type="text"] {
+  width: 95%;
 }
 
 #settings .setting_elem {

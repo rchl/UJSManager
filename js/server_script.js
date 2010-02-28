@@ -253,7 +253,7 @@ function handleXHRRequest(query)
       return readFile(q_filename)||{error: "Wasn't able to read file or file empty!"}
     case 'writetxt':
       var File = null;
-      if (File=writeFile(q_filename, query['data'][0], query['can_overwrite']))
+      if (File=writeFile(q_filename, unescape(query['data'][0]), query['can_overwrite']))
       {
         if (query['can_overwrite'])
         {
