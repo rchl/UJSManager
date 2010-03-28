@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        UJS Manager - script installer
 // @include     *.js*
-// @version     0.6
+// @version     0.7
 // @servicepath {{service_path}}
 // @uniqueid    {{unique_id}}
 // ==/UserScript==
@@ -21,9 +21,6 @@ document.addEventListener(
     var badge = document.createElement('div');
     badge.setAttribute('style', 'background:#ffffe1; color:#000; border:1px solid #c0c0c0;' +
         'padding:5px; font-family:Verdana,sans-serif; font-size:12px;');
-
-    // save script text now, later it might be modified by other user scripts
-    var script_text = document.getElementsByTagName('pre')[0].innerHTML;
 
     badge.show = function()
     {
@@ -61,7 +58,6 @@ document.addEventListener(
       install_but.onclick = function(){ install_script(); }
 
     var close_but = document.createElement('button');
-      //close_but.textContent = 'X';
       close_but.setAttribute('style', 'float:right; padding:0; margin:3px; border:none;'+
           'background:-o-skin("Speed Dial Thumbnail Close Button Skin"); width:-o-skin;'+
           'height:-o-skin; cursor:pointer;');
@@ -86,6 +82,11 @@ document.addEventListener(
     {
       var unique_id = '{{unique_id}}';
       var service_uri = '{{service_path}}';
+
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', location.href, false);
+      xhr.send(null);
+      var script_text = xhr.responseText;
 
       var form = document.createElement('form');
       form.action = service_uri;
