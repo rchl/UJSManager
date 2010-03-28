@@ -1,7 +1,7 @@
 /**
   * Utility functions
   */
-Array.prototype.contains = function(item)
+Array.prototype.indexOf = function(item)
 {
   for (var i=0; i<this.length; i++)
   {

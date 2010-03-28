@@ -201,62 +201,24 @@ function handleXHRRequest(query)
   switch (action)
   {
     case 'toggle':
-      var
-        newpath = null,
-        enabled = null,
-        File = SHARED_DIR.resolve( q_filename );
-
-      if ( File && File.exists )
-      {
-        if ( File.path.match(/\.js\.xx$/i) )
-        {
-          newpath = File.path.replace(/\.js\.xx$/i, '.js');
-          enabled = true;
-        }
-        else if ( File.path.match(/\.js$/i) )
-        {
-          newpath = File.path.replace(/\.js$/i, '.js.xx');
-          enabled = false;
-        }
-        else
-        {
-          return {error: "Error. Script with file name " + q_filename + " is not user script file!"};
-        }
-
-        // make sure new path does not overwrite any other file
-        if ( newpath && !SHARED_DIR.resolve(newpath).exists )
-        {
-          File = File.moveTo(newpath);
-        }
-        else
-        {
-          return {
-            error: "Error. Script with file name " + newpath.replace(/.*\/([^\/]+)$/, '$1') + " already exists!",
-            enabled: !enabled
-          };
-        }
-
-        ScriptsDirectory.hasChanged();
-        return {
-          script: ScriptsDirectory.getUserScript(File),
-          enabled: enabled
-        };
-      }
-      break;
+      return ScriptsDirectory.toggle(q_filename);
     case 'toggleshare':
       return ScriptsDirectory.shareScript(q_filename);
     case 'getsettings':
       return Script.getSettings(q_filename);
     case 'changesetting':
+    {
       var q_exactmatch = query['exactmatch'][0];
       var q_name = query['name'][0];
       var q_value = query['value'][0];
       return Script.changeSetting(q_filename, q_exactmatch, q_name, q_value);
+    }
     case 'delete':
       return ScriptsDirectory.deleteScript(q_filename)||{error: 'Deleting file failed!'};
     case 'readtxt':
       return readFile(q_filename)||{error: "Wasn't able to read file or file empty!"}
     case 'writetxt':
+    {
       var File = null;
       if (File=writeFile(q_filename, unescape(query['data'][0]), query['can_overwrite']))
       {
@@ -277,6 +239,7 @@ function handleXHRRequest(query)
       }
       else
         return { error: "Wasn't able to write file. Possibly file with that name already exists!" };
+    }
     case 'haschanged':
       return { modified: ScriptsDirectory.hasChanged() };
     case 'remindmelater':
@@ -418,13 +381,9 @@ var ScriptsDirectory = new function()
   this.getAllUserScripts = function(requested_dir)
   {
     if ( requested_dir && SHARED_DIR.resolve(requested_dir).exists )
-    {
       SHARED_DIR = SHARED_DIR.resolve(requested_dir);
-    }
     else
-    {
       SHARED_DIR = opera.io.filesystem.mountSystemDirectory('shared');
-    }
 
     var istopdir = /\/shared$/i.test(SHARED_DIR.path);
     SHARED_DIR.refresh();
@@ -508,9 +467,7 @@ var ScriptsDirectory = new function()
 
         // add user js installer to list because it wasn't there when reading dir
         if ( !ujs_installer )
-        {
           scripts.push( ScriptsDirectory.getUserScript(File) );
-        }
       }
     }
 
@@ -555,7 +512,6 @@ var ScriptsDirectory = new function()
     var
       path = File.path.replace('mountpoint:/', '')
       ,printpath = path.replace(/\.xx$/i, '');
-
 
     var obj = {
         prettyname  : unescape(File.name.replace(/\.xx$/i, '')),
@@ -616,7 +572,8 @@ var ScriptsDirectory = new function()
 
   this.isShared = function(path)
   {
-    if (!path || !shared_scripts.include(path)) return false;
+    if (!path || !shared_scripts.include(path))
+      return false;
 
     for (var i=0; i<DATA.scripts.length; i++)
     {
@@ -639,17 +596,12 @@ var ScriptsDirectory = new function()
       return { error: "Sharing of this script is disabled. It contains data specific to this user which shouldn't be shared."};
     }
 
-    var i = shared_scripts.contains(filename);
-
+    var index;
     // if filename already in array then remove and unshare script
-    if (i != -1)
-    {
-      shared_scripts.splice(i, 1);
-    }
+    if ((index = shared_scripts.indexOf(filename)) != -1)
+      shared_scripts.splice(index, 1);
     else
-    {
       shared_scripts.push(filename);
-    }
 
     setPref('shared_scripts', shared_scripts.join('|'));
     return { shared: shared_scripts.include(filename) };
@@ -694,6 +646,65 @@ var ScriptsDirectory = new function()
       }
     }
     return false;
+  }
+
+  this.toggle = function(filepath)
+  {
+    var
+      newpath = null,
+      enabled = null,
+      File = SHARED_DIR.resolve(filepath);
+
+    if ( File && File.exists )
+    {
+      if ( File.path.match(/\.js\.xx$/i) )
+      {
+        // enable script
+        newpath = File.path.replace(/\.js\.xx$/i, '.js');
+        enabled = true;
+      }
+      else if ( File.path.match(/\.js$/i) )
+      {
+        // disable script
+        newpath = File.path.replace(/\.js$/i, '.js.xx');
+        enabled = false;
+      }
+      else
+      {
+        // do nothin
+        return {error: "Error. Script with file name " + filepath + " is not user script file!"};
+      }
+
+      // make sure new path does not overwrite any other file
+      if ( newpath && !SHARED_DIR.resolve(newpath).exists )
+      {
+        File = File.moveTo(newpath);
+      }
+      else
+      {
+        return {
+          error: "Error. Script with file name " + newpath.replace(/.*\/([^\/]+)$/, '$1') + " already exists!",
+          enabled: !enabled
+        };
+      }
+
+      var s = ScriptsDirectory.getUserScript(File);
+
+      // update script object
+      var index = -1;
+      for (var i=0; i<DATA.scripts.length; i++)
+      {
+        if (DATA.scripts[i].filepath == filepath)
+          DATA.scripts[i] = s;
+      }
+
+      ScriptsDirectory.hasChanged();
+
+      return {
+        script: s,
+        enabled: enabled
+      };
+    }
   }
 }
 DATA = { scripts: ScriptsDirectory.getAllUserScripts() };

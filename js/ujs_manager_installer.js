@@ -68,7 +68,7 @@ document.addEventListener(
       close_but.onclick = function(){ badge.hide(); };
 
     var desc = document.createElement('span');
-      desc.textContent = ' UJS Manager detected script file. It can be installed as a user script. ';
+    desc.textContent = ' UJS Manager detected script file. It can be installed as a user script. ';
 
     badge.appendChild(close_but);
     badge.appendChild(install_but);
@@ -80,7 +80,7 @@ document.addEventListener(
     // hide badge (we want it animate to screen)
     badge.style.marginTop = -badge.scrollHeight+'px';
 
-    badge.show()
+    badge.show();
 
     function install_script()
     {
