@@ -482,3 +482,8 @@ button img {
   #edit_msg a { display: none; }
 }
 
+/* We're in a panel - I guess */
+@media all and (max-width: 400px) {
+  a[rel="sidebar"] { display: none; }
+}
+
