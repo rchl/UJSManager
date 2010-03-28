@@ -179,6 +179,7 @@ function handleRequest( event )
 
   DATA = {
     scripts     : ScriptsDirectory.getAllUserScripts(dir_query),
+    onoff       : getPref('disabled_scripts') ? 'off' : 'on',
     sorting     : getPref('sorting')||'name',
     display     : getPref('display')||'name',
     alt_icon    : getPref('alt_icon')||'',
@@ -203,6 +204,8 @@ function handleXHRRequest(query)
   {
     case 'toggle':
       return ScriptsDirectory.toggle(q_filename);
+    case 'toggleall':
+      return ScriptsDirectory.toggleAll(query['enable'][0] == 'true');;
     case 'toggleshare':
       return ScriptsDirectory.shareScript(q_filename);
     case 'getsettings':
@@ -378,6 +381,8 @@ var ScriptsDirectory = new function()
   var files_arr = [];
   // array of filenames that we share
   var shared_scripts = ( getPref('shared_scripts') ? getPref('shared_scripts').split('|') : [] );
+  // array of filepaths that are disabled
+  var disabled_scripts = ( getPref('disabled_scripts') ? JSON.parse(getPref('disabled_scripts')) : [] );
 
   /**
     * Reads all user scripts in directory
@@ -710,6 +715,67 @@ var ScriptsDirectory = new function()
         enabled: enabled
       };
     }
+  }
+
+  this.toggleAll = function(enable)
+  {
+    var err = '';
+
+    if (enable)
+    {
+      if (!disabled_scripts.length)
+        return true;
+
+      for (var i=0; i<DATA.scripts.length; i++)
+      {
+        var s = DATA.scripts[i];
+        if (disabled_scripts.indexOf(s.filepath) != -1)
+        {
+          var ret;
+          if ((ret = ScriptsDirectory.toggle(s.filepath)) && !('error' in ret))
+            DATA.scripts[i] = ret.script;
+          else
+            err += ret.error + '\n';
+        }
+      }
+      disabled_scripts = [];
+      setPref('disabled_scripts', '');
+    }
+    else
+    {
+      // if there are scripts disabled, don't overwrite
+      if (disabled_scripts.length)
+        return;
+
+      // disable
+      disabled_scripts = [];
+      for (var i=0; i<DATA.scripts.length; i++)
+      {
+        var s = DATA.scripts[i];
+        if (s.isdirectory)
+          continue;
+
+        if (s.isenabled)
+        {
+          var ret;
+          if ((ret = ScriptsDirectory.toggle(s.filepath)) && !('error' in ret))
+          {
+            disabled_scripts.push(ret.script.filepath);
+            DATA.scripts[i] = ret.script;
+          }
+          else
+            err += ret.error + '\n';
+        }
+      }
+
+      if (disabled_scripts.length)
+        setPref('disabled_scripts', JSON.stringify(disabled_scripts));
+    }
+
+    if (err)
+      return { error: err };
+    else
+      return {};
   }
 }
 DATA = { scripts: ScriptsDirectory.getAllUserScripts() };

@@ -67,6 +67,15 @@ $(document).ready(function() {
 
   $('#create_script').click(ScriptsList.newScript);
 
+  // handler for toggling all scripts
+  $('#onoff').bind('click', function(e) {
+    if ($(this).hasClass('off'))
+      ScriptsList.toggleAll(true);
+    else
+      ScriptsList.toggleAll(false);
+    $(this).toggleClass('off');
+  });
+
   // perform action if specified
   var action = location.hash.match(/^#([^&]+)$/);
   if (action)
@@ -135,7 +144,29 @@ var ScriptsList = new function()
           alert(data.error);
 
         $('button.toggle img', form).attr( { class: ( data.enabled ? 'disabled' : '' ), disabled: false } );
-      }, 'json');
+      });
+  }
+
+  /**
+    * Toggle all script files
+    */
+  this.toggleAll = function(enable)
+  {
+    // when disabling enable overlay
+    $('#scripts_list_overlay').attr({ class: enable ? 'on' : 'off' });
+
+    Server.post('toggleall',
+      { enable: enable },
+      function(data)
+      {
+        if (data.error)
+          alert('Following scripts were not ' + (enable ? 'enabled' : 'disabled' ) + ':\n' + data.error + '\nPlease correct problem manually.');
+
+        // when enabling, reload (lazy way)
+        if (enable)
+          location.reload();
+      }
+    );
   }
 
   this.shareScript = function(ev)

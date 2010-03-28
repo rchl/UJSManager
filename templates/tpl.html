@@ -20,18 +20,29 @@
       <input type="text" id="quickfind" value="Quick find">
     </div>
     <div id="toolbar_container">
+      <div class="button {{onoff}}" id="onoff" title="Click to enable/disable all scripts">
+        <div><div>ON</div></div>
+      </div>
       <!--<a href="http://my.opera.com/community/forums/forum.dml?id=120"
         target="_blank" style="float: right; text-decoration: underline;">Get User Scripts</a>-->
-      <div class="button">Sort by: {{sorting}}
+      <div class="button">View
         <ul>
-          <li><a href="?sorting=name">Sort by name</a></li>
-          <li><a href="?sorting=status" title="Sorts by enabled/disabled status">Sort by status</a></li>
-        </ul>
-      </div>
-      <div class="button">Display: {{display}}
-        <ul>
-          <li><a href="?display=name" title="Displays name extracted from script header (if available)">Display name</a></li>
-          <li><a href="?display=filename">Display filename</a></li>
+          <li>
+            <div class="button"><strong>Sort by: {{sorting}}</strong>
+              <ul>
+                <li><a href="?sorting=name"> name</a></li>
+                <li><a href="?sorting=status" title="Sorts by enabled/disabled status"> status</a></li>
+              </ul>
+            </div>
+          </li>
+          <li>
+            <div class="button"><strong>Display: {{display}}</strong>
+              <ul>
+                <li><a href="?display=name" title="Displays name extracted from script header (if available)"> name</a></li>
+                <li><a href="?display=filename"> filename</a></li>
+              </ul>
+            </div>
+          </li>
         </ul>
       </div>
       <a class="button" rel="sidebar" href="" title="UJS Manager">Add to panel</a>
@@ -75,6 +86,7 @@
           </div>
         </form>
       </li>
+      <div id="scripts_list_overlay" class="{{onoff}}"></div>
     </ul>
     <div id="footer">
       UJS Manager v{{version}} by <a href="http://my.opera.com/d.i.z./" target="_blank">Rafał Chłodnicki</a><br>
