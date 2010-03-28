@@ -396,60 +396,85 @@ button img {
   font-size: small;
 }
 
-#install_dialog {
+#scripts_list_overlay {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, .7);
+  border-radius: 5px;
+  color: #ccc;
+  font-size: 18pt;
+  text-align: center;
+}
+
+#scripts_list_overlay.off {
+  display: block;
+}
+
+/**
+  * Script install dialog
+  */
+#dialog {
   height: 200px;
   width: 500px;
   margin: 0 auto;
 }
 
-#install_dialog p {
+#dialog > * {
+  margin: 5px;
+}
+
+#dialog p {
   margin: 1em 0;
 }
 
-#install_dialog button {
+#dialog button {
   padding: 1px 8px;
 }
 
-#install_dialog h1 {
+#dialog h1 {
   font-size: 48px;
   color: #fff;
   text-shadow: #000 1px 1px 4px;
   font-family: Verdana, sans-serif;
-  margin: 0;
 }
 
-#install_dialog h1 img {
+#dialog h1 img {
   vertical-align: middle;
 }
 
-#install_dialog h1 span {
+#dialog h1 span {
   display: block;
   font-size: 14px;
   text-align: right;
 }
 
-#install_dialog form {
+#dialog form {
   background-color: #fff;
   border-radius: 3px;
   box-shadow: 0px 2px 10px #555;
+  -o-box-shadow: 0px 2px 10px #555;
   padding: 1em;
   text-align: center;
 }
 
-#install_dialog form textarea {
+#dialog form textarea {
   display: none;
 }
 
-#install_dialog form p {
+#dialog form p {
   font-size: 16px;
 }
 
-#install_dialog table {
+#dialog table {
   width: 100%;
   border: none;
 }
 
-#install_dialog table td {
+#dialog table td {
   width: 50%;
   padding: 0;
   margin: 0;
@@ -457,12 +482,12 @@ button img {
   vertical-align: top;
 }
 
-#install_dialog table th {
+#dialog table th {
   background: #000;
   color: #fff;
 }
 
-#install_dialog table td > div{
+#dialog table td > div{
   overflow-x: auto;
 }
 
@@ -485,5 +510,8 @@ button img {
 /* We're in a panel - I guess */
 @media all and (max-width: 400px) {
   a[rel="sidebar"] { display: none; }
+  #dialog { width: auto; }
+  #dialog h1 { font-size: 18pt; }
+  #dialog h1 img { display: none; }
 }
 
