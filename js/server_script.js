@@ -265,18 +265,22 @@ var Script = new function()
   {
     var
       start = content.indexOf('// ==UserScript=='),
-      end = content.indexOf('// ==/UserScript=='),
-      desc = null;
+      end,
+      desc;
 
-    if ( start!=-1 && end!=-1 )
+    if ( start === 0 )
     {
-      // add length of header start string
-      start += 18
-      desc = content.substr(start, end-start);
-      // remove trailing/ending spaces
-      desc = desc.replace(/(^\s+|\s+$)/, '');
-      // remove some stuph
-      desc = desc.replace(/^\/\/\s+/gm, '');
+      end = content.indexOf('// ==/UserScript==');
+      if ( end != -1 )
+      {
+        // add length of header start string
+        start += 18
+        desc = content.substr(start, end-start);
+        // remove trailing/ending spaces
+        desc = desc.replace(/(^\s+|\s+$)/, '');
+        // remove some stuph
+        desc = desc.replace(/^\/\/\s+/gm, '');
+      }
     }
 
     if ( !desc )
