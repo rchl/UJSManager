@@ -1,7 +1,8 @@
 /**
   *
   * UJS Manager Unite Application
-  * Rafal Chlodnicki, 2009
+  * Rafal Chlodnicki, 2009-2010
+  * http://unite.opera.com/application/401/
   *
   */
 
@@ -124,7 +125,8 @@ var ScriptsList = new function()
 
     $('button.toggle img', form).attr( { class: 'disabled' } );
 
-    $.post('', { action: 'toggle', filename: form.name, enable: form.check.checked },
+    Server.post('toggle',
+      { filename: form.name, enable: form.check.checked },
       function(data)
       {
         if (!data.error)
@@ -140,14 +142,15 @@ var ScriptsList = new function()
   {
     var form = ev.target.form;
 
-    $.post('', { action: 'toggleshare', filename: form.name },
+    Server.post('toggleshare',
+      { filename: form.name },
       function(data)
       {
         if (!data.error)
           form.className = (data.shared ? 'shared' : '');
         else
           alert(data.error);
-      }, 'json');
+      });
   }
 
   this.deleteScript = function(ev)
@@ -157,7 +160,8 @@ var ScriptsList = new function()
     if ( form.name && confirm('Do you really want to delete script:\n' +
                  unescape(form.name) + '?') )
     {
-      $.post('', { action: 'delete', filename: form.name },
+      Server.post('delete',
+        { filename: form.name },
         function(data)
         {
           if (!data.error)
@@ -168,7 +172,7 @@ var ScriptsList = new function()
           {
             alert(data.error);
           }
-        }, 'json');
+        });
     }
   }
 
@@ -176,13 +180,14 @@ var ScriptsList = new function()
   {
     var form = ev.target.form;
 
-    $.post('', { action: 'getsettings', filename: form.name },
+    Server.post('getsettings',
+      { filename: form.name },
       function(data)
       {
         if (data)
           return ScriptSettings.open(form.name, data);
         alert("Can't find any settings for this script!");
-      }, 'json');
+      });
   }
 
   this.changeDirectory = function(ev)
@@ -224,24 +229,21 @@ var ScriptsList = new function()
     else
       form = ev.target.form;
 
-    $.post('', { action: 'readtxt', filename: form.name },
+    Server.post('readtxt',
+      { filename: form.name },
       function(data)
       {
         if (!data.error)
-        {
-          $('#edit_msg').html('Experimental! Please backup before saving.<br><a href="#edittxt='+form.name+'" target="_blank">open in new tab</a>');
           EditDialog.open(form, data, { open: ScriptsList.hide, close: ScriptsList.show });
-        }
         else
-        {
           alert(data.error);
-        }
-      }, 'json');
+      });
   }
 
   this.checkIfModified = function()
   {
-    $.post('', { action: 'haschanged' },
+    Server.post('haschanged',
+      {},
       function(data)
       {
         if (data && data.modified)
@@ -249,7 +251,7 @@ var ScriptsList = new function()
           $('#changes').slideDown('normal');
           clearInterval(window.interval);
         }
-      }, 'json');
+      });
   }
 }
 
@@ -381,7 +383,8 @@ var ScriptSettings = new function()
 
     ev.target.disabled = true;
 
-    $.post('', { action: 'changesetting', filename: currently_editing, exactmatch: ev.target.exactmatch, name: ev.target.name, value: val },
+    Server.post('changesetting',
+      { filename: currently_editing, exactmatch: ev.target.exactmatch, name: ev.target.name, value: val },
       function(data)
       {
         var inp = ev.target;
@@ -403,7 +406,7 @@ var ScriptSettings = new function()
         }
 
         ev.target.disabled = false;
-      }, 'json');
+      });
   }
 
   this.saveEditedSetting = function(form)
@@ -413,7 +416,8 @@ var ScriptSettings = new function()
     form.edit_field.value =
       form.edit_field.value.replace(/[\r\n]+/g, '');
 
-    $.post('', { action: 'changesetting', filename: currently_editing, exactmatch: _self.related_element.exactmatch, name: _self.related_element.name, value: form.edit_field.value },
+    Server.post('changesetting',
+      { filename: currently_editing, exactmatch: _self.related_element.exactmatch, name: _self.related_element.name, value: form.edit_field.value },
       function(data)
       {
         if (data)
@@ -423,7 +427,7 @@ var ScriptSettings = new function()
           EditDialog.close();
         }
         form.edit_field.disabled = false;
-      }, 'json');
+      });
   }
 }
 
@@ -589,11 +593,24 @@ var Notifier = new function()
   this.close = function() {
     var _this = this;
 
-    $.post('', { action: 'remindmelater' },
+    Server.post('remindmelater',
+      {},
       function()
       {
         // hide notifier
         $(_this).parent().slideUp('normal');
       });
+  }
+}
+
+/**
+  * Communication with server side
+  */
+var Server = new function()
+{
+  this.post = function(action, args, callback)
+  {
+    args.action = action;
+    $.post('', args, callback, 'json');
   }
 }
