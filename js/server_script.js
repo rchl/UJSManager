@@ -271,10 +271,12 @@ var Script = new function()
       end,
       desc;
 
-    if ( start === 0 )
+    // Only accept headers at the beginning of the file but also
+    // accept one preceeding characters for UTF8 BOM (Opera bug - should not be exposed)
+    if (start <= 1)
     {
       end = content.indexOf('// ==/UserScript==');
-      if ( end != -1 )
+      if (end != -1)
       {
         // add length of header start string
         start += 18
@@ -286,7 +288,7 @@ var Script = new function()
       }
     }
 
-    if ( !desc )
+    if (!desc)
       return null;
 
     var
@@ -296,17 +298,17 @@ var Script = new function()
       line_rgx = /^@(.+?)\s+(.+)/,
       data = [];
 
-    for ( var i=0; i<lines.length; i++ )
+    for (var i=0; i<lines.length; i++)
     {
       line = lines[i];
       // skip empty lines
-      if ( !line ) continue;
+      if (!line) continue;
 
       rgx_match = line.match(line_rgx);
-      if ( rgx_match && rgx_match.length > 1 )
+      if (rgx_match && rgx_match.length > 1)
       {
         var name = rgx_match[1], val = rgx_match[2];
-        data.push( { key: name, value: trim(val) } );
+        data.push({ key: name, value: trim(val) });
       }
     }
     return (data?data:null);
