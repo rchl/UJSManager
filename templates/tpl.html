@@ -48,6 +48,7 @@
       <a class="button" rel="sidebar" href="" title="UJS Manager">Add to panel</a>
     </div>
     <div onclick="location.reload();" id="changes">Detected changes in directory. Click to reload.</div>
+    <div id="readonly" data-keep-if="readonly">This directory is not writable. Please select another directory and refresh page. Otherwise some features will not work correctly.</div>
     <ul id="scripts_list">
       <li data-list="scripts">
         <form name="{{scripts[].filepath}}" handler="toggleItem" class="{{scripts[].isshared}}">

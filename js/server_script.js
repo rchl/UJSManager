@@ -11,7 +11,7 @@ var
   APP_DIR = opera.io.filesystem.mountSystemDirectory('application'),
   SERVICE_DOAP = 'http://unite.opera.com/service/doap/401/',
   /* DON'T FORGET TO UPDATE VERSION FOR EVERY RELEASE !!! */
-  SERVICE_VERSION = '2.5',
+  SERVICE_VERSION = '2.6',
   SERVICE_PATH = 'http://' + opera.io.webserver.hostName + opera.io.webserver.currentServicePath,
   SERVICE_PATH_ADMIN = 'http://admin.' + opera.io.webserver.hostName + opera.io.webserver.currentServicePath,
   DATA;
@@ -185,7 +185,8 @@ function handleRequest( event )
     alt_icon    : getPref('alt_icon')||'',
     version     : SERVICE_VERSION,
     newversion  : Updater.checkUpdate(),
-    service_path: SERVICE_PATH
+    service_path: SERVICE_PATH,
+    readonly    : !ScriptsDirectory.isWritable()
   }
 
   var template = new Markuper( 'templates/tpl.html', DATA );
@@ -452,24 +453,24 @@ var ScriptsDirectory = new function()
     }
 
     // only top directory should get ujs installer script
-    if ( istopdir )
+    if (istopdir)
     {
       // copy user js installer if not found or older
-      var scr_installer = ScriptsDirectory.getUserScript( APP_DIR.resolve('/js/ujs_manager_installer.js') );
+      var scr_installer = ScriptsDirectory.getUserScript(APP_DIR.resolve('/js/ujs_manager_installer.js'));
 
-      if ( !ujs_installer
+      if (!ujs_installer
           || getPropOfArrayItem('version', scr_installer.header) > getPropOfArrayItem('version', ujs_installer.header)
           || getPropOfArrayItem('servicepath', ujs_installer.header) != SERVICE_PATH
-          || getPropOfArrayItem('uniqueid', ujs_installer.header) != getPref('unique_id') )
+          || getPropOfArrayItem('uniqueid', ujs_installer.header) != getPref('unique_id'))
       {
         // insert current service path to ujs installer
         scr_installer.filecontent = scr_installer.filecontent.replace(
-          /\{\{service_path\}\}/g, SERVICE_PATH);
+                                      /\{\{service_path\}\}/g, SERVICE_PATH);
 
         // generate unique id (for script installation)
         var unique_id = Math.random();
         scr_installer.filecontent = scr_installer.filecontent.replace(
-          /\{\{unique_id\}\}/g, unique_id);
+                                      /\{\{unique_id\}\}/g, unique_id);
         setPref('unique_id', unique_id);
 
         // if script exists, it might have been disabled so we have to use filename with .xx
@@ -478,8 +479,8 @@ var ScriptsDirectory = new function()
         var File = writeFile(filename, scr_installer.filecontent, true);
 
         // add user js installer to list because it wasn't there when reading dir
-        if ( !ujs_installer )
-          scripts.push( ScriptsDirectory.getUserScript(File) );
+        if (!ujs_installer && File)
+          scripts.push(ScriptsDirectory.getUserScript(File));
       }
     }
 
@@ -778,6 +779,18 @@ var ScriptsDirectory = new function()
       return { error: err };
     else
       return {};
+  }
+
+  this.isWritable = function()
+  {
+    var temp_name = 'isDirectoryWritableTest' + new Date().getTime() + '.tmp';
+
+    if (writeFile(temp_name, 'foo', false))
+    {
+      deleteFile(temp_name);
+      return true;
+    }
+    return false;
   }
 }
 DATA = { scripts: ScriptsDirectory.getAllUserScripts() };

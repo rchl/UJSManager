@@ -80,7 +80,11 @@ function writeFile(path, content, can_overwrite)
     if (File.exists && !can_overwrite)
       return false;
 
-    var stream = SHARED_DIR.open(path, opera.io.filemode.WRITE);
+    try {
+      var stream = SHARED_DIR.open(path, opera.io.filemode.WRITE);
+    } catch(e) {
+      return false;
+    }
     stream.write(content);
     stream.close();
     return File;
