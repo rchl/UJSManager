@@ -265,7 +265,10 @@ var ScriptsList = new function()
       function(data)
       {
         if (!data.error)
+        {
+          $('#edit_msg').html('<a href="#edittxt='+form.name+'" target="_blank">open in new tab</a>');
           EditDialog.open(form, data, { open: ScriptsList.hide, close: ScriptsList.show });
+        }
         else
           alert(data.error);
       });
