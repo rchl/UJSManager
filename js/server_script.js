@@ -274,7 +274,7 @@ var Script = new function()
 
     // Only accept headers at the beginning of the file but also
     // accept one preceeding characters for UTF8 BOM (Opera bug - should not be exposed)
-    if (start <= 1)
+    if (start == 0 || start == 1)
     {
       end = content.indexOf('// ==/UserScript==');
       if (end != -1)
