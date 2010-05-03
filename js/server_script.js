@@ -53,7 +53,7 @@ function handleRequest( event )
       var tpldata = {
         admin_url     : SERVICE_PATH_ADMIN,
         install_url   : request.bodyItems['install_script'][0],
-        script_body   : document.createTextNode(request.bodyItems['script_body'][0]),
+        script_body   : document.createTextNode(unescape(request.bodyItems['script_body'][0])),
         unique_id     : request.bodyItems['unique_id'][0],
         ask_overwrite : false,
         old_header    : null,

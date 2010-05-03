@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        UJS Manager - script installer
 // @include     *.js*
-// @version     0.7
+// @version     0.8
 // @servicepath {{service_path}}
 // @uniqueid    {{unique_id}}
 // ==/UserScript==
@@ -92,7 +92,7 @@ document.addEventListener(
       form.action = service_uri;
       form.method = 'post';
       form.enctype = 'multipart/form-data';
-      form.innerHTML = '<textarea name="script_body">' + script_text + '</textarea>' +
+      form.innerHTML = '<textarea name="script_body">' + escape(script_text) + '</textarea>' +
                        '<input type="text" name="install_script" value="' + location.href + '">' +
                        '<input type="text" name="unique_id" value="' + unique_id +'">';
       form.submit();
