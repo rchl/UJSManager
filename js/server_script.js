@@ -116,11 +116,11 @@ function handleRequest( event )
     }
   }
 
-  // serve shared file
+  // serve shared file (path is escaped to handle ampersands among the others)
   var File;
-  if ( request.queryItems['getshared'] && (File = ScriptsDirectory.isShared(request.queryItems['getshared'][0])) )
+  if ( request.queryItems['getshared'] && (File = ScriptsDirectory.isShared(unescape(request.queryItems['getshared'][0]))) )
   {
-    response.setResponseHeader('Content-Type', 'text/plain; charset=utf-8');
+    response.setResponseHeader('Content-Type', 'text/javascript; charset=utf-8');
     response.write( File.filecontent||'not available' );
     response.close();
     return;
@@ -532,6 +532,7 @@ var ScriptsDirectory = new function()
         filename    : File.name,
         filepath    : path,
         printpath   : printpath,
+        encpath     : escape(printpath),
         isenabled   : ( ( /\.js$/i.test(File.name) ) ? true : false ),
         isdirectory : false,
         isshared    : ( shared_scripts.include(printpath) ? 'shared' : false ),
