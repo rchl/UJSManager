@@ -208,6 +208,11 @@ button img {
   background: #811F21;
 }
 
+.sortby_name .s_name, .sortby_status .s_status,
+.display_name .d_name, .display_filename .d_filename {
+  text-decoration: underline;
+}
+
 #changes {
   display: none;
   padding: .5em;

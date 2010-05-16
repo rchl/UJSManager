@@ -28,18 +28,18 @@
       <div class="button">View
         <ul>
           <li>
-            <div class="button"><strong>Sort by: {{sorting}}</strong>
-              <ul>
-                <li><a href="?sorting=name"> name</a></li>
-                <li><a href="?sorting=status" title="Sorts by enabled/disabled status"> status</a></li>
+            <div class="button"><strong>Sort by:</strong>
+              <ul class="sortby_{{sorting}}">
+                <li><a class="s_name" href="?sorting=name"> name</a></li>
+                <li><a class="s_status" href="?sorting=status" title="Sorts by enabled/disabled status"> status</a></li>
               </ul>
             </div>
           </li>
           <li>
-            <div class="button"><strong>Display: {{display}}</strong>
-              <ul>
-                <li><a href="?display=name" title="Displays name extracted from script header (if available)"> name</a></li>
-                <li><a href="?display=filename"> filename</a></li>
+            <div class="button"><strong>Display:</strong>
+              <ul class="display_{{display}}">
+                <li><a class="d_name" href="?display=name" title="Displays name extracted from script header (if available)"> name</a></li>
+                <li><a class="d_filename" href="?display=filename"> filename</a></li>
               </ul>
             </div>
           </li>
