@@ -20,13 +20,13 @@ var
 opera.io.webserver.addEventListener('_request', handleRequest, false);
 opera.io.webserver.addEventListener('shared', handleShared, false)
 
-function handleRequest( event )
+function handleRequest(event)
 {
   var response = event.connection.response;
   var request = event.connection.request;
   var isOwner = event.connection.isOwner; // || (request.ip == '127.0.0.1');
 
-  if ( PublicFiles.isPublic(request.uri) )
+  if (PublicFiles.isPublic(request.uri))
   {
     response.closeAndRedispatch();
     return;
@@ -37,19 +37,19 @@ function handleRequest( event )
   // warning page. Instead, we redirect from script file to public service address and then to
   // admin service address without causing warnings. Admin page is where all the magic happens
   // and remote users can't connect to it anyway.
-  if ( request.bodyItems['install_script'] )
+  if (request.bodyItems['install_script'])
   {
     // show error if incorect id given
-    if ( !request.bodyItems['unique_id']
-         || request.bodyItems['unique_id'][0] != getPref('unique_id') )
+    if (!request.bodyItems['unique_id']
+         || request.bodyItems['unique_id'][0] != getPref('unique_id'))
     {
-      response.write( "This won't work. Bad unique id." );
+      response.write("This won't work. Bad unique id.");
       response.close();
       return;
     }
 
     // pre-installation dialog which shows script info and install button
-    if ( !request.bodyItems['confirm'] )
+    if (!request.bodyItems['confirm'])
     {
       var tpldata = {
         admin_url     : SERVICE_PATH_ADMIN,
@@ -63,12 +63,12 @@ function handleRequest( event )
 
       // extract file name from path
       var filename = tpldata.install_url.match(/.+\/([^/?]+)/);
-      if ( filename )
+      if (filename)
       {
         filename = filename[1];
         // check if file already exists and ask for overwrite if yes
         var existing_body = readFile(filename);
-        if ( existing_body !== null )
+        if (existing_body !== null)
         {
           tpldata.ask_overwrite = true;
           tpldata.old_header = Script.parseHeader(existing_body)||{'<missing>':''};
@@ -78,17 +78,17 @@ function handleRequest( event )
       }
       else
       {
-        response.write( "Error. UJS Manager couldn't extract filename from path." );
+        response.write("Error. UJS Manager couldn't extract filename from path.");
         response.close();
         return;
       }
 
-      var template = new Markuper( 'templates/install.html', tpldata );
-      response.write( template.parse().html() );
+      var template = new Markuper('templates/install.html', tpldata);
+      response.write(template.parse().html());
       response.close();
       return;
     }
-    else if ( isOwner ) // handles actual installation of script after confirming
+    else if (isOwner) // handles actual installation of script after confirming
     {
       var
         script_uri = unescape(request.bodyItems['install_script'][0]),
@@ -119,16 +119,17 @@ function handleRequest( event )
 
   // serve shared file (path is escaped to handle ampersands among the others)
   var File;
-  if ( request.queryItems['getshared'] && (File = ScriptsDirectory.isShared(unescape(request.queryItems['getshared'][0]))) )
+  if (request.queryItems['getshared']
+      && (File = ScriptsDirectory.isShared(unescape(request.queryItems['getshared'][0]))))
   {
     response.setResponseHeader('Content-Type', 'text/javascript; charset=utf-8');
-    response.write( File.filecontent||'not available' );
+    response.write(File.filecontent||'not available');
     response.close();
     return;
   }
 
   // show public page
-  if ( !isOwner )
+  if (!isOwner)
   {
     var tpldata = {
       msg       : $('<p>If you are the owner of this service, you can go to <a href="' + SERVICE_PATH_ADMIN + '" onclick="location.replace(this.href);return false;">Admin section</a></p>'),
@@ -137,14 +138,14 @@ function handleRequest( event )
       username  : opera.io.webserver.userName||'user'
     };
 
-    var template = new Markuper( 'templates/remote.html', tpldata );
-    response.write( template.parse().html() );
+    var template = new Markuper('templates/remote.html', tpldata);
+    response.write(template.parse().html());
     response.close();
     return;
   }
 
   // handle xhr calls with json
-  if ( request.bodyItems['action'] )
+  if (request.bodyItems['action'])
   {
     var resp = handleXHRRequest(request.bodyItems);
     response.setResponseHeader('Content-type', 'text/plain; charset=utf-8');
@@ -154,18 +155,18 @@ function handleRequest( event )
   }
 
   // set sorting pref
-  if ( request.queryItems['sorting'] )
+  if (request.queryItems['sorting'])
   {
     setPref('sorting', request.queryItems['sorting'][0]);
   }
   // set display pref
-  if ( request.queryItems['display'] )
+  if (request.queryItems['display'])
   {
     setPref('display', request.queryItems['display'][0]);
   }
   if (request.queryItems['alt_icon'])
   {
-    setPref( 'alt_icon', getPref('alt_icon') ? '' : '_red' );
+    setPref('alt_icon', getPref('alt_icon') ? '' : '_red');
     response.setStatusCode('303');
     response.setResponseHeader('Location', SERVICE_PATH_ADMIN);
     response.close();
@@ -173,7 +174,7 @@ function handleRequest( event )
 
   var dir_query = null;
 
-  if ( request.queryItems['dir'] )
+  if (request.queryItems['dir'])
   {
     dir_query = request.queryItems['dir'][0];
   }
@@ -190,7 +191,7 @@ function handleRequest( event )
     readonly    : !ScriptsDirectory.isWritable()
   }
 
-  var template = new Markuper( 'templates/tpl.html', DATA );
+  var template = new Markuper('templates/tpl.html', DATA);
 
   response.write(template.parse().html());
   response.close();
