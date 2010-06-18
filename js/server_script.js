@@ -17,7 +17,8 @@ var
   DATA;
 
 
-opera.io.webserver.addEventListener( '_request', handleRequest, false );
+opera.io.webserver.addEventListener('_request', handleRequest, false);
+opera.io.webserver.addEventListener('shared', handleShared, false)
 
 function handleRequest( event )
 {
@@ -191,7 +192,27 @@ function handleRequest( event )
 
   var template = new Markuper( 'templates/tpl.html', DATA );
 
-  response.write( template.parse().html() );
+  response.write(template.parse().html());
+  response.close();
+}
+
+function handleShared(event)
+{
+  var response = event.connection.response;
+  var request = event.connection.request;
+
+  var filepath = request.uri.match(/\/shared(\/.+)/);
+  if (filepath)
+    filepath = filepath[1];
+
+  // serve shared file (path is escaped to handle ampersands among the others)
+  var File, content;
+  if (filepath && (File = ScriptsDirectory.isShared(unescape(filepath))))
+  {
+    content = File.filecontent;
+    response.setResponseHeader('Content-Type', 'text/javascript; charset=utf-8');
+  }
+  response.write(content||'not available');
   response.close();
 }
 
