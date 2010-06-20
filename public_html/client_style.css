@@ -137,7 +137,6 @@ button img {
   border: 1px solid #fff;
   border-radius: 5px;
   box-shadow: 0px 1px 2px #aaa;
-  -o-box-shadow: 0px 1px 2px #aaa;
   z-index: 10;
 }
 
@@ -149,7 +148,6 @@ button img {
   background: #fff;
   border: 1px solid #fff;
   box-shadow: 0px 2px 8px #666;
-  -o-box-shadow: 0px 2px 8px #666;
   border-radius: 3px;
 }
 
@@ -178,7 +176,6 @@ button img {
   border: none;
   border-radius: 0;
   box-shadow: none;
-  -o-box-shadow: none;
 }
 
 .button ul ul li {
@@ -240,7 +237,6 @@ button img {
   font-size: 1.2em;
   border-radius: 5px;
   box-shadow: 0px 0px 2px #555;
-  -o-box-shadow: 0px 0px 2px #555;
 }
 
 #scripts_list  {
@@ -250,7 +246,6 @@ button img {
   background-color: #fff;
   border-radius: 5px;
   box-shadow: 0px 0px 2px #555;
-  -o-box-shadow: 0px 0px 2px #555;
 }
 
 #scripts_list form {
@@ -532,7 +527,6 @@ button img {
   background-color: #fff;
   border-radius: 3px;
   box-shadow: 0px 2px 10px #555;
-  -o-box-shadow: 0px 2px 10px #555;
   padding: 1em;
   text-align: center;
 }
