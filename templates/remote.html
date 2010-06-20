@@ -7,11 +7,12 @@
   <link rel="stylesheet" type="text/css" href="client_style.css">
 </head>
 <body>
+  {{msg}}
   <div id="dialog">
-    <h1><img src="favicon.48x48.png"> UJS Manager <span>shared scripts</span></h1>
+    <h1><img src="favicon.48x48.png"> UJS Manager <span><b>{{username}}'s</b> shared scripts</span></h1>
     <form style="text-align: left;">
-      <p data-keep-if="scripts.length">{{username}}'s shared scripts:
-        <ul>
+      <p data-keep-if="scripts.length">
+        <ul class="bullets">
           <li data-list="scripts">
             <div data-remove-if="scripts[].isdirectory">
               <a href="shared{{scripts[].encpath}}" title="{{scripts[].prettyname}}">{{scripts[].printname}}</a>
@@ -21,10 +22,7 @@
       </p>
       <p data-remove-if="scripts.length">{{username}} does not share any scripts</p>
     </form>
-    <div style="text-align: center;">
-      {{footer}}
-      {{msg}}
-    </div>
+    <div style="text-align: center;">{{footer}}</div>
   </div>
 </body>
 </html>

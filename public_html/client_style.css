@@ -32,6 +32,16 @@ li {
   -o-text-overflow: ellipsis;
 }
 
+ul.bullets {
+  list-style-type: square;
+  font-size: 130%;
+}
+
+ul.bullets li {
+  overflow: visible;
+  margin-left: 1em;
+}
+
 form, button, p {
   margin: 0;
   padding: 0;
