@@ -6,6 +6,7 @@
   <link rel="shortcut icon" href="favicon.16x16{{alt_icon}}.png" type="image/x-icon">
   <link rel="stylesheet" type="text/css" href="client_style.css">
   <script type="text/javascript" src="jquery-1.3.2.js"></script>
+  <script type="text/javascript" src="jquery.scrollTo-1.4.2.js"></script>
   <script type="text/javascript" src="client_script.js"></script>
 </head>
 <body>
@@ -13,6 +14,8 @@
     <button id="close_notifier" title="Do not bother me for next 3 days"></button>
     <span id="msg"><a href="http://unite.opera.com/application/401/"
     target="_blank">Click to download new version!</a></span></div>
+
+  <div onclick="location.reload();" id="changes" class="notifier">Detected changes in directory. Click to reload.</div>
 
   <div id="main_container">
     <button id="create_script" class="" title="Create new script file"><img alt="new script">NEW</button>
@@ -46,8 +49,8 @@
         </ul>
       </div>
       <a class="button" rel="sidebar" href="" title="UJS Manager">Add to panel</a>
+      <!--<button onclick="ScriptUpdater.checkUpdate()">chckupd</button>-->
     </div>
-    <div onclick="location.reload();" id="changes">Detected changes in directory. Click to reload.</div>
     <div id="readonly" data-keep-if="readonly">This directory is not writable. Please select another directory and refresh page. Otherwise some features will not work correctly.</div>
     <ul id="scripts_list">
       <li data-list="scripts">
@@ -67,6 +70,7 @@
             <button type="button" name="check" class="toggle reset" handler="toggleScript"
               title="Click to toggle"><img class="disabled" data-keep-if="scripts[].isenabled" alt="on"><img
               data-remove-if="scripts[].isenabled" alt="off"></button>
+            <a href="#" target="_blank" type="button" class="update reset">update</a>
             <span class="name" title="{{scripts[].printname}}" handler="toggleItem">{{scripts[].prettyname}}</span>
             <div class="desc">
               <div class="script_infobox" data-keep-if="scripts[].header">

@@ -281,6 +281,8 @@ function handleXHRRequest(query)
     case 'remindmelater':
       Updater.remindMeLater();
       return true;
+    case 'check_script_updates':
+      return ScriptUpdater.checkUpdate();
     default:
       return {error: 'Option not implemented!'};
   }
@@ -976,4 +978,70 @@ function saveScriptDownloadURL(filename, url)
   localStorage.download_urls = JSON.stringify(urls);
 
   return true;
+}
+
+var ScriptUpdater = new function()
+{
+  // returns array of script filenames that have update
+  this.checkUpdate = function()
+  {
+    var have_update = {}, header;
+    var urls = localStorage.download_urls;
+
+    if (urls)
+      urls = JSON.parse(urls);
+
+    var scripts = ScriptsDirectory.getScriptsMatchingFilter('ENABLED');
+
+    for (var i=0; i<scripts.length; i++)
+    {
+      // if no url saved from installation then look for one in header
+      var scripturl = urls[scripts[i].filename]
+                      || getPropOfArrayItem('download', scripts[i].header)
+                      || getPropOfArrayItem('ujs:download', scripts[i].header)
+                      || getPropOfArrayItem('identifier', scripts[i].header);
+
+      if (!scripturl)
+        continue;
+
+      try {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', scripturl, false);
+        xhr.send();
+
+        if (xhr.status == 200 && xhr.responseText)
+        {
+          header = Script.parseHeader(xhr.responseText);
+          if (!header) continue;
+
+          // check if remote script has higher version
+          var remote_version = getPropOfArrayItem('version', header);
+          if (remote_version)
+          {
+            var local_version = getPropOfArrayItem('version', scripts[i].header);
+            if (local_version && parseFloat(remote_version) > parseFloat(local_version))
+            {
+              have_update[scripts[i].filepath] = scripturl;
+              continue;
+            }
+          }
+
+          // check if remote script has later modification date
+          var remote_date = getPropOfArrayItem('ujs:modified', header);
+          if (remote_date)
+          {
+            var local_date = getPropOfArrayItem('ujs:modified', scripts[i].header);
+            if (local_date && new Date(remote_date) > new Date(local_date))
+            {
+              have_update[scripts[i].filepath] = scripturl;
+              continue;
+            }
+          }
+        }
+      }
+      catch(e) {}
+    }
+
+    return have_update;
+  }
 }

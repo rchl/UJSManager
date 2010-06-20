@@ -58,14 +58,14 @@ button img {
   vertical-align: text-bottom;
 }
 
-#notifier {
+#notifier, .notifier {
   background: -o-skin("Viewbar Skin");
   padding: 6px;
   font-family: Verdana, Tahoma, sans-serif;
   font-size: 12px;
 }
 
-#notifier #close_notifier {
+#notifier #close_notifier, .notifier #close_notifier {
   float: right;
   padding: 0;
   margin: 0 3px;
@@ -76,11 +76,10 @@ button img {
   cursor: pointer;
 }
 
-#notifier #msg > *  {
-  color: -o-skin("Viewbar Skin");
-  text-shadow: #555 0px 0px 2px;
+#notifier #msg > *, .notifier #msg > * {
+  color: #000;
   font-weight: bold;
-  padding: 3px;
+  padding: 3px 0;
 }
 
 #main_container {
@@ -223,9 +222,7 @@ button img {
 #changes {
   display: none;
   padding: .5em;
-  margin: .5em;
   cursor: pointer;
-  background: -o-skin("Dialog Page Skin");
 }
 
 #readonly {
@@ -284,6 +281,17 @@ button img {
 
 #scripts_list .toggle img.disabled {
   content: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8%2F9hAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1%2B%2FAAAABV0RVh0Q3JlYXRpb24gVGltZQAyOS82LzA55Xg1zgAAABx0RVh0U29mdHdhcmUAQWRvYmUgRmlyZXdvcmtzIENTNAay06AAAAGASURBVDiNpZPLK0RRHMc%2Fxz3FxmNBSEosBkVXSpQyFqRYTB4Lq2ujbCby%2FAuUZDESCyuWUwwp2ciwF3cjbMjWCoW45xoLznXnwcL86tSv7%2B%2F7e%2F%2BOSCQSZCM5WXkDUitCCA%2Bc3c0dAcYB8xuygeXF0NuG5ujKhacIwexubhEQ9zmmig10LobeHrSf9FuVMv5y5tsWB5o04M0gHC2wHFeajivJ9KzWKHVlIRxXmuFogZU2A6WMid%2FSdgbGaKzoI08WcXZ3ADABbCZVoFxpKleiXElNcQdaLy806W2Y4%2BX9kdX4iMa9Nr0AjjJwlEFL1TBT3TsMNc%2FjKAOrbQUQLBwM8PT67PEytCBtwDy5ihEobaerfhSzsoeS%2FErWTya5vb%2F20%2B30AK4RATYA1o5m%2BEgIOgKDbJ1GiF%2FGgJ%2BsQEQrSXcwsFJ9jm%2BNwdp%2Bjq9iqTO1t8M3TZnvwJVB4FgHObzYS6XYQNAPJFWgpXepzuJrVf5TjuxPX25qTtop%2F1ey%2Fo2ftG6clPyKKlYAAAAASUVORK5CYII%3D");
+}
+
+#scripts_list .update {
+  background: #FFF94E;
+  color: #000;
+  border: 1px solid #000;
+  border-radius: 3px;
+  vertical-align: baseline;
+  font-size: 70%;
+  padding: 0 2px;
+  display: none;
 }
 
 #scripts_list .folder {
@@ -423,7 +431,7 @@ button img {
   background: -o-skin("Push Default Button Skin");
 }
 
-#edit_dialog {
+#edit_dialog, #update_dialog {
   position: fixed;
   left: 100%;
   top: 0;

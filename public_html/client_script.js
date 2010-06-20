@@ -95,9 +95,10 @@ $(document).ready(function() {
       break;
   }
 
+  ScriptUpdater.init();
+
   // set up periodical check for changes in directory (every 5 minutes)
   window.interval = setInterval(ScriptsList.checkIfModified, 1000*60*5);
-
 });
 
 var ScriptsList = new function()
@@ -635,6 +636,63 @@ var Notifier = new function()
         $(_this).parent().slideUp('normal');
       });
   }
+}
+
+var ScriptUpdater = new function()
+{
+  /* Checks if scripts were checked for update in last 3 days
+     and performs check if not */
+  this.init = function()
+  {
+    var last_update = getPref('last_scripts_update');
+    if (last_update)
+    {
+      var diff = new Date() - new Date(last_update);
+      var days = Math.round(diff/(1000*60*60*24));
+      if (days >= 3)
+        ScriptUpdater.checkUpdate();
+    }
+    else
+      ScriptUpdater.checkUpdate();
+  }
+
+  this.checkUpdate = function()
+  {
+    setPref('last_scripts_update', new Date().toString());
+    Server.post("check_script_updates", {}, process);
+  }
+
+  var process = function(data)
+  {
+    // returns object with key = filepath / value = update url
+    for (var n in data)
+    {
+      var update_button = $('form[name="' + n + '"] a.update');
+      if (update_button)
+      {
+        update_button.attr('href', data[n]).fadeIn('slow');
+        $.scrollTo(update_button, 1000);
+      }
+    }
+  }
+}
+
+function setPref(key, val)
+{
+  if (val === undefined) return;
+
+  if (window.localStorage)
+    return localStorage[key] = escape(val);
+  else
+    return widget.setPreferenceForKey(escape(val), key);
+}
+
+function getPref(key)
+{
+  if (window.localStorage)
+    return unescape(localStorage[key]||'');
+  else
+    return unescape(widget.preferenceForKey(key)||'');
 }
 
 /**
