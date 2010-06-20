@@ -563,17 +563,15 @@ var ScriptsDirectory = new function()
         header      : null
       };
 
-    if ( obj.filecontent )
+    if (obj.filecontent)
     {
       // if at last one setting found in file then add edit button
-      if ( obj.filecontent.match(/\/\*@[^@]+@(bool|int|string)@\*\/.+\/\*@\*\//g) )
-      {
+      if (obj.filecontent.match(/\/\*@[^@]+@(bool|int|string)@\*\/.+\/\*@\*\//g))
         obj.hassettings = true;
-      }
 
       // read script header
       obj.header = Script.parseHeader(obj.filecontent);
-      if ( obj.header )
+      if (obj.header)
       {
         if (getPref('display') != 'filename')
         {
