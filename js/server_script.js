@@ -912,9 +912,18 @@ var Updater = new function()
         return false;
       }
     }
-    req.open('GET', SERVICE_DOAP, false);
-    req.setRequestHeader('Cache-Control', 'no-cache');
-    req.send();
+      req.open('GET', SERVICE_DOAP, false);
+      req.setRequestHeader('Cache-Control', 'no-cache');
+    try
+    {
+      req.send();
+    }
+    catch(e)
+    {
+      // If it fails we'll delete pref and hope it will work next time
+      setPref('lastCheck', '');
+      return false;
+    }
   };
 
   this.remindMeLater = function()
