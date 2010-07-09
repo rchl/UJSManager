@@ -1,9 +1,7 @@
 /**
-  *
   * UJS Manager Unite Application
   * Rafal Chlodnicki, 2009-2010
   * http://unite.opera.com/application/401/
-  *
   */
 
 var
@@ -11,7 +9,7 @@ var
   APP_DIR = opera.io.filesystem.mountSystemDirectory('application'),
   SERVICE_DOAP = 'http://unite.opera.com/service/doap/401/',
   /* DON'T FORGET TO UPDATE VERSION FOR EVERY RELEASE !!! */
-  SERVICE_VERSION = '2.8',
+  SERVICE_VERSION = '2.9',
   SERVICE_PATH = 'http://' + opera.io.webserver.hostName + opera.io.webserver.currentServicePath,
   SERVICE_PATH_ADMIN = 'http://admin.' + opera.io.webserver.hostName + opera.io.webserver.currentServicePath,
   DATA;
