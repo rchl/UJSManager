@@ -52,7 +52,7 @@ function handleRequest(event)
       var tpldata = {
         admin_url     : SERVICE_PATH_ADMIN,
         install_url   : request.bodyItems['install_script'][0],
-        script_body   : document.createTextNode(unescape(request.bodyItems['script_body'][0])),
+        script_body   : document.createTextNode(request.bodyItems['script_body'][0]),
         unique_id     : request.bodyItems['unique_id'][0],
         ask_overwrite : false,
         old_header    : null,
@@ -70,7 +70,7 @@ function handleRequest(event)
         {
           tpldata.ask_overwrite = true;
           tpldata.old_header = Script.parseHeader(existing_body)||{'<missing>':''};
-          tpldata.new_header = Script.parseHeader(tpldata.script_body.data)||{'<missing>':''};
+          tpldata.new_header = Script.parseHeader(unescape(tpldata.script_body.data))||{'<missing>':''};
 
         }
       }
@@ -90,7 +90,7 @@ function handleRequest(event)
     {
       var
         script_uri = unescape(request.bodyItems['install_script'][0]),
-        script_body = request.bodyItems['script_body'][0],
+        script_body = unescape(request.bodyItems['script_body'][0]),
         overwrite = ( request.bodyItems['overwrite'] ? true : false ),
         filename = script_uri.match(/.+\/([^/?]+)/);
 
