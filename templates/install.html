@@ -16,7 +16,14 @@
       <input type="hidden" name="confirm" value="1">
       <input type="hidden" name="unique_id" value="{{unique_id}}">
       <input type="hidden" name="install_script" value="{{install_url}}">
+      <input type="hidden" name="filename" value="{{filename}}" data-keep-if="ask_overwrite">
       <textarea name="script_body">{{script_body}}</textarea>
+
+      <p>User script will be saved with this name: <input name="filename" value="{{filename}}"></p>
+
+      <span>You may change name but keep in mind that changing extension from <code>user.js</code>
+      to <code>js</code> or vice-versa might break script.</span>
+
       <p class="warning" data-keep-if="ask_overwrite">Script with that name already
         exists in your user scripts directory.<br>It will be overwritten if you proceed.
       </p>

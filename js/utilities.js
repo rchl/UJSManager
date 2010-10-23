@@ -23,6 +23,16 @@ function getPropOfArrayItem(prop, arr)
   return null;
 }
 
+function getFilenameFromPath(filepath)
+{
+  var filename = filepath.match(/.+\/([^/?]+)/);
+
+  if (filename)
+    filename = filename[1];
+
+  return filename;
+}
+
 function trim(str)
 {
   return str.replace(/^[\s\-]+|\s+$/, '');

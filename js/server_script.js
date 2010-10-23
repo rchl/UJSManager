@@ -46,12 +46,24 @@ function handleRequest(event)
       return;
     }
 
+    var install_url = request.bodyItems['install_script'][0];
+    // extract file name from path
+
+    var filename = getFilenameFromPath(install_url);
+    // user name that user defined (or left default)
+    if (request.bodyItems['filename'])
+      filename = request.bodyItems['filename'][0];
+
+    // check if file already exists by trying to read conent (will get useful later)
+    var file_content = readFile(filename)
+
     // pre-installation dialog which shows script info and install button
-    if (!request.bodyItems['confirm'])
+    // Also show when target filename exists and overwrite param was not send
+    if (!request.bodyItems['confirm'] || (!request.bodyItems['overwrite'] && file_content !== null))
     {
       var tpldata = {
         admin_url     : SERVICE_PATH_ADMIN,
-        install_url   : request.bodyItems['install_script'][0],
+        install_url   : install_url,
         script_body   : document.createTextNode(request.bodyItems['script_body'][0]),
         unique_id     : request.bodyItems['unique_id'][0],
         ask_overwrite : false,
@@ -59,19 +71,16 @@ function handleRequest(event)
         new_header    : null
       };
 
-      // extract file name from path
-      var filename = tpldata.install_url.match(/.+\/([^/?]+)/);
       if (filename)
       {
-        filename = filename[1];
+        tpldata.filename = filename;
+
         // check if file already exists and ask for overwrite if yes
-        var existing_body = readFile(filename);
-        if (existing_body !== null)
+        if (file_content !== null)
         {
           tpldata.ask_overwrite = true;
-          tpldata.old_header = Script.parseHeader(existing_body)||{'<missing>':''};
+          tpldata.old_header = Script.parseHeader(file_content)||{'<missing>':''};
           tpldata.new_header = Script.parseHeader(unescape(tpldata.script_body.data))||{'<missing>':''};
-
         }
       }
       else
@@ -91,11 +100,7 @@ function handleRequest(event)
       var
         script_uri = unescape(request.bodyItems['install_script'][0]),
         script_body = unescape(request.bodyItems['script_body'][0]),
-        overwrite = ( request.bodyItems['overwrite'] ? true : false ),
-        filename = script_uri.match(/.+\/([^/?]+)/);
-
-      // we are pretty sure that regexp above will match as it did in install dialog already
-      filename = filename[1];
+        overwrite = ( request.bodyItems['overwrite'] ? true : false );
 
       // save download url for future use
       saveScriptDownloadURL(filename, script_uri);
@@ -139,10 +144,10 @@ function handleRequest(event)
 
     // update global array of shared script
     var new_shared = [];
+
     for (var i=0; i<tpldata.scripts.length; i++)
-    {
       new_shared.push(tpldata.scripts[i].printpath);
-    }
+
     shared_scripts = new_shared;
 
     var template = new Markuper('templates/remote.html', tpldata);
