@@ -273,7 +273,7 @@ function handleXHRRequest(query)
           var new_script = ScriptsDirectory.getUserScript(File);
           DATA.scripts.push(new_script);
           var template = new Markuper( 'templates/tpl.html', { scripts: [new_script], service_path: SERVICE_PATH } );
-          return { script: template.parse().select('#scripts_list')[0].innerHTML };
+          return { script: template.parse().select('#scripts_list > li')[0].innerHTML };
         }
       }
       else
@@ -951,16 +951,16 @@ var PublicFiles = new function()
     var dir = APP_DIR.resolve(path);
     dir.refresh();
 
-    for ( var i=0,File; File=dir[i]; i++ )
+    for (var i = 0, File; File = dir[i]; i++)
     {
-      if ( File.isFile )
+      if (File.isFile)
       {
         var path = File.path, match = null;
-        if ( match = File.path.match(/(\/[^\/]+)$/) )
-        {
+
+        if (match = File.path.match(/(\/[^\/]+)$/))
           path = match[1];
-        }
-        files.push( path );
+
+        files.push(path);
       }
       else
       {
@@ -971,10 +971,10 @@ var PublicFiles = new function()
 
   this.isPublic = function(uri)
   {
-    for ( var i=0; i<files.length; i++ )
+    for (var i = 0; i < files.length; i++)
     {
       var item = files[i];
-      if ( uri.indexOf(item)>-1 )
+      if (uri.indexOf(item) > -1)
         return true;
     }
     return false;

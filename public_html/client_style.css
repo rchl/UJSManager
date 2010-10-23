@@ -386,6 +386,18 @@ button img {
   font-size: 1.6em;
 }
 
+
+.CodeMirror-line-numbers {
+  font-family: monospace;
+  font-size: 10pt;
+  margin: 0.4em;
+  text-align: right;
+  border-right: 1px solid #ccc;
+  padding-right: 3px;
+  color: #aaa;
+  height: 100%;
+}
+
 #close_settings img, #close_edit img {
   content: -o-skin("Back");
 }
@@ -592,4 +604,3 @@ button img {
   #dialog h1 { font-size: 18pt; }
   #dialog h1 img { display: none; }
 }
-

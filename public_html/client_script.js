@@ -6,6 +6,8 @@
   *
   */
 
+var g_editor;
+
 // this way it's much easier to handle new elements added
 // to document dynamically from html code
 document.addEventListener('click', function(e)
@@ -74,6 +76,15 @@ $(document).ready(function() {
     else
       ScriptsList.toggleAll(false);
     $(this).toggleClass('off');
+  });
+
+  // replace editing textarea with codemirror component
+  g_editor = new CodeMirror.fromTextArea('edit_field', {
+    path: "codemirror/",
+    parserfile: ["tokenizejavascript.js", "parsejavascript.js"],
+    stylesheet: "codemirror/jscolors.css",
+    lineNumbers: true,
+    passTime: 3000
   });
 
   // perform action if specified
@@ -268,7 +279,10 @@ var ScriptsList = new function()
         if (!data.error)
         {
           $('#edit_msg').html('<a href="#edittxt='+form.name+'" target="_blank">open in new tab</a>');
-          EditDialog.open(form, data, { open: ScriptsList.hide, close: ScriptsList.show });
+          EditDialog.open(form, data, { 
+            open: ScriptsList.hide, 
+            close: function(){ g_editor.setCode(''); ScriptsList.show(); }
+          });
         }
         else
           alert(data.error);
@@ -504,7 +518,9 @@ var EditDialog = new function()
       filename_el = $('#edit_filename');
     }
 
-    edit_field.value = data;
+    //edit_field.value = data;
+    g_editor.setCode(data);
+    g_editor.jumpToLine(1);
     edit_filename.value = '';
     save_callback = callback_obj.save;
     close_callback = callback_obj.close;
@@ -530,17 +546,17 @@ var EditDialog = new function()
     }
 
     // resize textarea to fit whole available height
-    edit_field.style.height = (edit_dialog.height() - ($('#edit_header').outerHeight()+edit_form.offsetHeight-edit_field.offsetHeight)) + 'px';
+    g_editor.wrapping.style.height = edit_field.style.height = (edit_dialog.height() - ($('#edit_header').outerHeight()+edit_form.offsetHeight-$('.CodeMirror-wrapping').height())) + 'px';
 
-    edit_field.form.onsubmit = function(e)
+    edit_field.form.addEventListener('submit', function(e)
     {
       EditDialog.save();
+      e.preventDefault();
       return false;
-    };
+    }, false);
 
     callback_obj.open();
     EditDialog.show()
-
   }
 
   this.close = function()

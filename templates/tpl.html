@@ -8,6 +8,7 @@
   <script type="text/javascript" src="jquery-1.3.2.js"></script>
   <script type="text/javascript" src="jquery.scrollTo-1.4.2.js"></script>
   <script type="text/javascript" src="client_script.js"></script>
+  <script type="text/javascript" src="codemirror/codemirror.js"></script>
 </head>
 <body>
   <div id="notifier" data-keep-if="newversion">
@@ -120,6 +121,11 @@
           <input name="filename"> (.js extension will be added automatically)</div>
         <textarea id="edit_field" spellcheck="false"></textarea>
         <span id="edit_msg"></span>
+      </div>
+      <div style="float: left;">
+        Editor powered by:<br>
+        <a href="http://codemirror.net/" target="_blank"><span style="color: #df0019;">{}</span>
+        <b style="color: #000;">CodeMirror</b></a>
       </div>
       <button type="submit"><img>Save</button>
     </form>
