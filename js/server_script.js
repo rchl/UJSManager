@@ -703,6 +703,8 @@ var ScriptsDirectory = new function()
   {
     if (!filepath) return;
 
+    deleteScriptDownloadURL(getFilenameFromPath(filepath));
+
     for (var i=0; i<DATA.scripts.length; i++)
     {
       if (DATA.scripts[i].filepath == filepath)
@@ -711,6 +713,7 @@ var ScriptsDirectory = new function()
         return deleteFile(filepath);
       }
     }
+
     return false;
   }
 
@@ -987,6 +990,19 @@ function saveScriptDownloadURL(filename, url)
   var urls = localStorage.download_urls||"{}";
   urls = JSON.parse(urls);
   urls[filename] = url;
+  localStorage.download_urls = JSON.stringify(urls);
+
+  return true;
+}
+
+function deleteScriptDownloadURL(filename)
+{
+  if (!window.localStorage || !filename)
+    return false;
+
+  var urls = localStorage.download_urls||"{}";
+  urls = JSON.parse(urls);
+  delete urls[filename];
   localStorage.download_urls = JSON.stringify(urls);
 
   return true;
