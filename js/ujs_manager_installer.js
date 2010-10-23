@@ -1,23 +1,24 @@
 // ==UserScript==
 // @name        UJS Manager - script installer
 // @include     *.js*
-// @version     0.9
+// @version     1.0
 // @servicepath {{service_path}}
 // @uniqueid    {{unique_id}}
 // ==/UserScript==
 
-// we want to be faster then some other user scripts to prevent conflicts
-// that's why we have to run before load event
+/* We want to be faster then some other user scripts
+   to prevent conflicts with them and our body child
+   test to see original DOM. */
 document.addEventListener('DOMContentLoaded', function()
 {
   document.removeEventListener('DOMContentLoaded', arguments.callee, false);
 
   // try to detect user scripts by pre tag alone
-  if ( !(document
-       && document.body
-       && document.body.childElementCount == 1
-       && document.body.firstElementChild.tagName == 'PRE'
-       && location.href.match(/\.js($|\?)/)) // matches .js extension (also with query)
+  if (!(document
+      && document.body
+      && document.body.childElementCount
+      && document.body.firstElementChild.tagName == 'PRE'
+      && location.href.match(/\.js($|\?)/)) // matches .js extension (also with query)
   )
     return;
 
