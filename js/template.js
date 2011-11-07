@@ -56,11 +56,11 @@ markuper.HTMLHelper =
     parseFromString: function( html )
     {
         var doc = document.implementation.createHTMLDocument('');
-        
+
         // HACK: do this so it's possible to load plain text
-        if ( html[0] != '<' ) { html = '<body>' + html + '</body>' };
-        
-        doc.documentElement.outerHTML = html;
+        if (html[0] != '<') { html = '<body>' + html + '</body>'; };
+
+        doc.documentElement.innerHTML = html;
         return doc;
     },
     /**
@@ -71,8 +71,7 @@ markuper.HTMLHelper =
      */
     serializeToString: function( doc )
     {
-        return '<!doctype html>\n' +
-               doc.documentElement.outerHTML;
+        return '<!doctype html>\n' + doc.documentElement.outerHTML;
     }
 }
 
@@ -149,7 +148,7 @@ markuper.extendedElement =
     {
         this.parseDataAttributes( userData, parseNodeAttributes );
         this.fillValues( userData, parseNodeAttributes );
-        
+
         return this;
     },
     /**
@@ -241,7 +240,7 @@ markuper.addFeaturesToElement = function ( element, features )
                     {
                         fn.apply( this[i], arguments )
                     }
-                    
+
                     return this;
                 }
             })( features[feature] );
@@ -428,7 +427,7 @@ markuper.splitWithDelimiters = function( str, regexp )
         lastIndex = offset + match.length;
     });
     if( lastIndex < str.length ) result.push( str.substr( lastIndex ) );
-    
+
     return result;
 }
 
@@ -442,12 +441,12 @@ markuper.evaluator = {};
  * Operators supported by the expression evaluator.
  *
  * <pre>{
- *  operator,   // the text symbol used for the operator. if you want spaces 
+ *  operator,   // the text symbol used for the operator. if you want spaces
  *              // just provide the symbol with spaces.
  *  numberOp,   // number of operands.
  *  typeOp,     // if it's a 1 operand operator this field indicates if it's a 'prefix'
  *              // or 'suffix' operator.
- *  operation,  // the function with the logic for the operator, it receives as 
+ *  operation,  // the function with the logic for the operator, it receives as
  *              // many boolean values as expected number of operands.
  * }</pre>
  */
@@ -492,13 +491,13 @@ markuper.evaluator.operatorsRegExp = (function()
     // when there are operators that are prefix of another we want the bigger
     // ones first, like ['!=', '!'] and not ['!', '!=']
     regexpArr.sort().reverse();
-    
+
     return new RegExp( regexpArr.join( '|' ), 'g' );
 })();
 
-/** 
+/**
  * A wrapper for {@link markuper.getData} with support for 'true' and 'false', strings, numbers and literal arrays.
- * 
+ *
  * @param   {Object}    data    The data object.
  * @param   {String}    key     The index for the <code>data</code> object.
  * @returns {Object|native}     The value found in the <code>data</code> object by indexing it through <code>key</code>.
@@ -506,7 +505,7 @@ markuper.evaluator.operatorsRegExp = (function()
 markuper.getValue = function( data, key )
 {
     if( key === undefined || key === null ) { return; }
-    
+
     var bools = {'true': true, 'false': false};
     // is it a boolean value?
     if( key.toLowerCase() in bools ) { return bools[key.toLowerCase()]; };
@@ -524,7 +523,7 @@ markuper.getValue = function( data, key )
     {
         return markuper.evaluator.evalArrayExpression( key, data );
     }
-    
+
     // TODO: make this the first item
     return markuper.getData( data, key );
 }
@@ -596,16 +595,16 @@ markuper.evaluator.registerFilter = function( name, fn )
     markuper.evaluator.registerFilter( 'escape', function( input )
     {
         if( typeof(input) != 'string' ) { return input; };
-        
+
         return input.replace(/'/g, "&#39;").replace(/"/g, "&quot;")
                     .replace(/</g, "&lt;").replace(/>/g, "&gt;")
                     .replace(/&/g, "&amp;");
     });
-    
+
     markuper.evaluator.registerFilter( 'escapejs', function( input )
     {
         if( typeof(input) != 'string' ) { return input; };
-        
+
         return input.replace(/'/g, "&#39;").replace(/"/g, "&quot;")
                     .replace(/\./g, '\\$&').replace(/\n/g, "\\n");
     });
@@ -615,10 +614,10 @@ markuper.evaluator.registerFilter = function( name, fn )
 
         return escape(input);
     });
-    
+
     markuper.evaluator.registerFilter('node', function(input) {
         if( typeof(input) != 'string' ) { return input; };
-        
+
         var div = document.createElement('div');
         div.innerHTML = input;
         return div.childNodes;
@@ -629,25 +628,25 @@ markuper.evaluator.registerFilter = function( name, fn )
 markuper.evaluator.evalExpression = function( expr, data )
 {
     if( expr === null || expr === undefined ) { return expr; }
-    
+
     var value;
     var registeredFilters = markuper.evaluator.filters;
     expr = markuper.escapeStrings( expr );
-    
+
     // support for filters: [|func]*
     var filters = expr.split('|');
     // remove the first element which is the expression, only filters
     // will remain
     expr = filters.shift();
-    
+
     // support for the ternary operator
-    if( typeof expr == 'string' 
+    if( typeof expr == 'string'
      && expr.match( /(.+)\s+\?\s+([^\s]+)(?:\s+:\s+([^\s]+))?/ ) )
     {
         var ifTrue = RegExp.$2;
         var ifFalse = RegExp.$3;
         var boolExpr = markuper.evaluator.evalBooleanExpression( RegExp.$1, data );
-        
+
         value = boolExpr ? arguments.callee(ifTrue, data) : arguments.callee(ifFalse, data);
     }
     else
@@ -655,7 +654,7 @@ markuper.evaluator.evalExpression = function( expr, data )
         //return markuper.getData( data, expr );
         value = markuper.getValue( data, expr );
     }
-    
+
     // apply filters
     for( var i = 0, filter; filter = (filters[i]||'').trim(); i++ )
     {
@@ -665,7 +664,7 @@ markuper.evaluator.evalExpression = function( expr, data )
         }
         value = registeredFilters[filter]( value, expr );
     }
-    
+
     return value;
 }
 
@@ -709,16 +708,16 @@ markuper.evaluator.evalExpression = function( expr, data )
  * @see #.evalBooleanExpression
  */
 markuper.evaluator.evalBooleanSimpleExpression = function( expr, data )
-{    
+{
     var operators   = markuper.evaluator.operators;
     var parsedExpr  = markuper.splitWithDelimiters( expr, markuper.evaluator.operatorsRegExp );
-    
+
     // remove empty entries
     for( var i=parsedExpr.length-1; i >= 0; i-- )
     {
         if( parsedExpr[i].match( /^\s*$/ ) ) { parsedExpr.splice( i, 1 ); }
     }
-    
+
     var ix;
     for( var i=0,op; op=operators[i]; i++ )
     {
@@ -735,7 +734,7 @@ markuper.evaluator.evalBooleanSimpleExpression = function( expr, data )
                 // replace the expression by its computed value
                 parsedExpr.splice( ix+(op.typeOp=='prefix'?0:-1), 2, bool );
                 break;
-                
+
                 case 2:
                 var left    = markuper.getValue( data, parsedExpr[ix-1].trim() ),
                     right   = markuper.getValue( data, parsedExpr[ix+1].trim() ),
@@ -746,7 +745,7 @@ markuper.evaluator.evalBooleanSimpleExpression = function( expr, data )
             }
         }
     }
-    
+
     return !!markuper.getValue( data, parsedExpr[0] );
 }
 
@@ -798,7 +797,7 @@ markuper.evaluator.evalArrayExpression = function( expr, data )
     var regexp = /\[([^\[\]]*)\]/g;
     var stack = [];
     var args;
-    
+
     while( expr.search(regexp) > -1 )
     {
         expr = expr.replace( regexp, function( str, p1 )
@@ -1012,7 +1011,7 @@ markuper.Template = function( path, _data, options )
     function init( path )
     {
         applyDefaults( options );
-        
+
         if( path )
         {
             _source = open( path );
@@ -1022,7 +1021,7 @@ markuper.Template = function( path, _data, options )
             _source = _options.html || _options.source || '';
             self.reset();
         }
-        
+
         //if(success === null) return;
         _template = createDocument( _source, _options.type );
         setupDataAttributes();
@@ -1042,7 +1041,7 @@ markuper.Template = function( path, _data, options )
             _options[key] = options[key];
         }
     }
-    
+
     /**
      * Opens <code>path</code> for reading and returns its contents.
      *
@@ -1057,46 +1056,46 @@ markuper.Template = function( path, _data, options )
         {
             throw "Exception: File I/O (opera.io) not available";
         }
-        
+
         var mp = opera.io.filesystem.mountSystemDirectory( 'application' );
         var stream = mp.open( path, 'r' );
         var source = stream.read( stream.bytesAvailable ).trim();
-        
+
         stream.close();
-        
+
         return source;
     }
-    
+
     function createDocument( string, type )
     {
         var doc;
-        
+
         // try to guess...
         if( !type )
         {
             if( /^<\?xml/.test(string) ) { type = 'xml'; }
         }
-        
+
         switch( type )
         {
             case 'text':
                 doc = markuper.HTMLHelper.parseFromString( '<pre id="text"></pre>' );
                 doc.getElementById('text').textContent = string;
                 break;
-                
+
             case 'xml':
                 doc = new DOMParser().parseFromString(string, 'text/xml');
                 break;
-                
+
             default:
                 doc = markuper.HTMLHelper.parseFromString( string );
                 break;
         }
-        
+
 
         return doc;
     }
-    
+
     /**
      * Registers all built-in <code>data-</code> supported attributes
      *
@@ -1144,11 +1143,11 @@ markuper.Template = function( path, _data, options )
             var args = key.split( ' ' );
             var attributeName = args[0];
             var expr = args.slice(1).join(' ');
-            
+
             node.removeAttribute( 'data-set-attribute' );
             setAttribute( node, attributeName, expr, data );
         });
-        
+
         self.registerDataAttribute( 'set-*-attribute', function( attr, node, data, key )
         {
             node.removeAttribute( 'data-'+attr );
@@ -1156,7 +1155,7 @@ markuper.Template = function( path, _data, options )
             setAttribute( node, attr, key, data );
         });
     }
-    
+
     /**
      * Function logic of the <code>data-set-*-attribute</code> registered data attribute.
      *
@@ -1174,16 +1173,16 @@ markuper.Template = function( path, _data, options )
     function setAttribute( node, name, expr, data )
     {
         var value = markuper.evaluator.evalExpression( expr, data );
-        
+
         if( value !== undefined )
         {
             node.setAttribute( name, value );
             return true;
         }
-        
+
         return false;
     }
-    
+
     /**
      * Adds the {@link markuper.extendedElement} mixin into the given element along with a template reference as <code>_template</code>.
      *
@@ -1197,7 +1196,7 @@ markuper.Template = function( path, _data, options )
 
         return element;
     }
-    
+
     /**
      * Rebuilds all the internal structures dealing with the <code>data-</code> attributes.
      *
@@ -1206,7 +1205,7 @@ markuper.Template = function( path, _data, options )
     function rebuildDataAttributes()
     {
         var registeredDataAttributes = _registeredDataAttributes;
-        
+
         _registeredDataAttributes = [];
         _dataAttributesName = [];
         _dataAttributes = {};
@@ -1232,7 +1231,7 @@ markuper.Template = function( path, _data, options )
             _dataAttributesName.push( attribute );
         }
     }
-    
+
     /**
      * Registers a function for handling nodes with a specifc <code>data-</code> attribute.
      *
@@ -1255,7 +1254,7 @@ markuper.Template = function( path, _data, options )
     {
         // http://dev.w3.org/html5/spec/Overview.html#xml-compatible
         if( /[^*a-zA-Z0-9-]/.test( attribute ) ) { return; }
-        
+
         if( attribute.indexOf( '*' ) < 0 )
         {
             _registeredDataAttributes.push( {name: attribute, fn: fn} );
@@ -1265,11 +1264,11 @@ markuper.Template = function( path, _data, options )
         else
         {
             _registeredDataAttributes.push( {regexp: attribute, fn: fn} );
-            
+
             var value = attribute.replace( /\*/g, '[^=]+?' );
             var regexp = new RegExp( '\\bdata-'+value+'(?==)', 'g' );
             var matches = _source.match( regexp ) || [];
-            
+
             for( var i = 0, attr; attr = matches[i]; i++ )
             {
                 addDataAttribute( attr.slice('data-'.length), fn );
@@ -1363,7 +1362,7 @@ markuper.Template = function( path, _data, options )
     {
         root = root || _template.documentElement;
         parseRootAttributes = parseRootAttributes == undefined ? false : parseRootAttributes;
-        
+
         if( !markuper.looksLikeArray(attribute) ) { attribute = [attribute]; };
 
         //var startTime = new Date().getTime();
@@ -1382,7 +1381,7 @@ markuper.Template = function( path, _data, options )
             if( markuper.hasParentWithDataAttribute( node.ownerElement, _dataAttributesName, root ) ) continue;
             nodes.push( node );
         }
-        
+
         // also search for root attributes
         if( parseRootAttributes )
         {
@@ -1392,7 +1391,7 @@ markuper.Template = function( path, _data, options )
                 nodes.push( node );
             }
         }
-        
+
         //var endTime = new Date().getTime();
 
         for( var i=0,nodes; node=nodes[i]; i++ )
@@ -1604,7 +1603,7 @@ markuper.Template = function( path, _data, options )
     function fillList( list, data, listDataKey, listData )
     {
         if ( !list || !list.parentNode ) { return null };
-        
+
         var listSelectKey   = list.getAttribute( 'data-select' );
         //var listSelect      = markuper.getData( data, listSelectKey );
         var listSelect      = markuper.evaluator.evalExpression( listSelectKey, data );
@@ -1627,10 +1626,10 @@ markuper.Template = function( path, _data, options )
         {
             markuper.setData( data, listDataKey+'[]', listValues[i] );
             if( list.id && list.id.indexOf('{{') < 0) { item.id += '-' + i; };
-            
+
             item.removeAttribute( 'data-list' );
             item.parse( data.data, true );
-            
+
             if( listSelectKey && item.value == listSelect )
             {
                 item.setAttribute( 'selected', 'selected' );
@@ -1688,7 +1687,7 @@ markuper.Template = function( path, _data, options )
         for( var i = 0; i < n; i++ )
         {
             var item = extendElement( list.cloneNode( true ) );
-            
+
             list.parentNode.insertBefore( item, list );
             //list.parentNode.insertBefore( document.createTextNode( '\n' ), list );
             if( fn ) { fn(item, i) };
@@ -1836,7 +1835,7 @@ markuper.Template = function( path, _data, options )
         //{
             this.parseDataAttributes( data );
         //}
-        
+
         this.fillValues( data );
 
         this.removeListTemplates();
@@ -1873,7 +1872,7 @@ markuper.Template = function( path, _data, options )
     {
         return new XMLSerializer().serializeToString(_template);
     }
-    
+
 
     /**
      * Finds elements using a CSS3 selector {@link http://www.w3.org/TR/css3-selectors/}.
@@ -1913,7 +1912,7 @@ markuper.Template = function( path, _data, options )
         // node of consecutive nodes even if the text found is in the second
         // node.
         contextNode.normalize();
-        
+
         return contextNode.selectNodes( xpath );
     };
 

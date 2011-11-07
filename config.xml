@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <widget id="ujs_manager_diz" network="private public">
 
   <widgetname>UJS Manager</widgetname>
@@ -11,10 +11,10 @@
   <icon height="32" width="32">public_html/favicon.32x32.png</icon>
   <icon height="16" width="16">public_html/favicon.16x16.png</icon>
 
-   <feature name="http://xmlns.opera.com/webserver">
-     <param name="servicepath" value="ujsmanage" />
-     <param name="type" value="service" />
-   </feature>
+  <feature name="http://xmlns.opera.com/webserver">
+    <param name="servicepath" value="ujsmanage" />
+    <param name="type" value="service" />
+  </feature>
 
   <feature name="http://xmlns.opera.com/fileio">
     <param name="folderhint" value="home" />
@@ -22,9 +22,7 @@
 
   <author>
     <name>Rafał Chłodnicki</name>
-    <organization />
     <email>rchl2k@gmail.com</email>
-    <link />
   </author>
 
 </widget>
