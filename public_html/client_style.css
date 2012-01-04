@@ -29,7 +29,7 @@ ul {
 li {
   white-space: nowrap;
   overflow-x: hidden;
-  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
 }
 
 ul.bullets {
@@ -250,7 +250,7 @@ button img {
   cursor: pointer;
   position: relative;
   overflow-x: hidden;
-  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
 }
 
 #scripts_list form:hover
@@ -344,7 +344,7 @@ button img {
 .script_infobox p {
   overflow-x: hidden;
   white-space: nowrap;
-  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
 }
 
 .script_infobox p b {
@@ -379,7 +379,7 @@ button img {
   background: -o-skin("Tab Button Skin");
   white-space: nowrap;
   overflow: hidden;
-  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
 }
 
 #settings_title, #edit_title {
@@ -415,7 +415,7 @@ button img {
   overflow-y: auto;
   overflow-x: hidden;
   height: 100%;
-  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
 }
 
 #settings ul.indent1 { padding-left: 1em; }
