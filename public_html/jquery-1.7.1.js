@@ -1564,22 +1564,6 @@ jQuery.support = (function() {
 		div.style.width = div.style.paddingLeft = "1px";
 		jQuery.boxModel = support.boxModel = div.offsetWidth === 2;
 
-		if ( typeof div.style.zoom !== "undefined" ) {
-			// Check if natively block-level elements act like inline-block
-			// elements when setting their display to 'inline' and giving
-			// them layout
-			// (IE < 8 does this)
-			div.style.display = "inline";
-			div.style.zoom = 1;
-			support.inlineBlockNeedsLayout = ( div.offsetWidth === 2 );
-
-			// Check if elements with layout shrink-wrap their children
-			// (IE 6 does this)
-			div.style.display = "";
-			div.innerHTML = "<div style='width:4px;'></div>";
-			support.shrinkWrapBlocks = ( div.offsetWidth !== 2 );
-		}
-
 		div.style.cssText = ptlm + vb;
 		div.innerHTML = html;
 
