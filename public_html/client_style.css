@@ -272,7 +272,7 @@ button img {
 }
 
 #scripts_list .delete img {
-  content: -o-skin("Mail Trash");
+  content: -o-skin("Delete");
 }
 
 #scripts_list .toggle img {
@@ -375,8 +375,10 @@ button img {
 
 #settings_header, #edit_header {
   padding: 1em;
+  margin-bottom: 6px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 15px;
   box-sizing: border-box;
-  background: -o-skin("Tab Button Skin");
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -466,7 +468,6 @@ button img {
 }
 
 #edit_form_content {
-  padding: 1em;
   background: #fff;
   border-bottom-left-radius: 5px;
   border-bottom-right-radius: 5px;
